@@ -170,13 +170,43 @@ button:disabled:hover { transform: none; box-shadow: none; }
 .detail-fields > .label { font-size: 8px; }
 .detail-description { font-size: 15px; line-height: 1.75; margin: 14px 0 18px; color: #d9d2c7; }
 .detail-price { font-size: 23px; margin-bottom: 10px; }
+.fitline-overview { margin: 18px 0 24px; padding: 16px; border: 1px solid #b3936630; border-radius: 8px; background: linear-gradient(125deg,#b3936612,transparent 65%); }
+.fitline-eyebrow { color: #a79c8d; font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 10px; }
+.fitline-purpose { color: #e2dbd0; font-size: 14px; line-height: 1.7; margin: 0; }
+.fitline-facts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; margin-top: 16px; }
+.fitline-facts div { min-width: 0; padding-top: 10px; border-top: 1px solid #b3936640; }
+.fitline-facts strong, .fitline-facts span { display: block; }
+.fitline-facts strong { color: #d7b382; font-size: 13px; font-weight: 500; line-height: 1.45; }
+.fitline-facts span { color: #b7afa3; font-size: 11px; line-height: 1.45; margin-top: 4px; }
+.fitline-quick-usage { border-top: 1px solid #b3936630; margin-top: 16px; padding-top: 12px; color: #c5beb2; font-size: 12px; line-height: 1.8; }
+.fitline-quick-usage strong { color: #e2dbd0; font-weight: 500; margin-right: 5px; }
 .fitline-information { margin-top: 28px; border-top: 1px solid var(--line); padding-top: 24px; min-width: 0; }
 .information-heading .label { font-size: 8px; }
 .information-heading h3 { font-size: 24px; font-weight: 500; letter-spacing: -.035em; margin-top: 9px; }
-.information-notice { margin-top: 18px; padding: 14px 16px; border-left: 2px solid #b39366; background: linear-gradient(100deg,#b393660d,transparent); }
-.information-notice strong { color: #dbbd91; font-size: 12px; font-weight: 500; }
-.information-notice p { font-size: 12px; color: #bdb6aa; line-height: 1.75; margin-top: 6px; }
-.information-reference { color: #b3aca1; font-size: 10px; line-height: 1.7; margin: 14px 0 20px; }
+.fitline-information h4 { color: #e5ded3; font-size: 15px; font-weight: 500; margin: 0 0 12px; }
+.fitline-audience, .fitline-properties, .fitline-nutrition, .fitline-features { margin: 24px 0; }
+.fitline-audience p { color: #c9c2b7; font-size: 14px; line-height: 1.75; }
+.fitline-properties ul, .fitline-components { color: #c9c2b7; font-size: 13px; line-height: 1.8; padding-left: 18px; list-style: disc; }
+.fitline-properties li + li, .fitline-components li + li { margin-top: 8px; }
+.fitline-properties li::marker, .fitline-components li::marker { color: #b39366; }
+.fitline-usage { margin: 24px 0; padding: 18px; border: 1px solid #b3936630; border-radius: 7px; background: #b3936607; }
+.usage-facts { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.usage-facts span { color: #d7b382; font-size: 12px; line-height: 1.5; }
+.usage-facts b { display: block; color: #8f897f; font-size: 9px; font-weight: 400; text-transform: uppercase; letter-spacing: .08em; }
+.fitline-usage ol { margin: 14px 0 0; padding-left: 20px; color: #c9c2b7; font-size: 13px; line-height: 1.8; list-style: decimal; }
+.fitline-usage li + li { margin-top: 8px; }
+.fitline-nutrition table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 18px; }
+.fitline-nutrition caption { text-align: left; font-size: 12px; color: #b7afa3; line-height: 1.7; padding-bottom: 10px; }
+.fitline-nutrition thead th { color: #d7b382; font-size: 11px; }
+.fitline-nutrition thead th:not(:first-child) { text-align: right; }
+.fitline-nutrition tr { border-top: 1px solid #ffffff10; }
+.fitline-nutrition th { color: #bdb7ad; font-weight: 400; text-align: left; padding: 8px 4px 8px 0; }
+.fitline-nutrition td { color: #e2dbd0; text-align: right; white-space: nowrap; padding: 8px 0; }
+.fitline-features ul { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; }
+.fitline-features li { border: 1px solid #ffffff20; border-radius: 4px; padding: 6px 10px; color: #c9c2b7; font-size: 11px; }
+.fitline-warnings { border-left: 2px solid #b39366; padding: 4px 0 4px 16px; margin: 24px 0; }
+.fitline-warnings ul { list-style: none; color: #c9c2b7; font-size: 12px; line-height: 1.75; }
+.fitline-warnings li + li { margin-top: 8px; }
 .information-item { border-top: 1px solid var(--line); }
 .information-item summary { display: flex; justify-content: space-between; align-items: center; gap: 18px; min-height: 52px; padding: 15px 0; list-style: none; cursor: pointer; color: #e5ded3; font-size: 13px; line-height: 1.55; transition: color .2s; }
 .information-item summary::-webkit-details-marker { display: none; }
@@ -186,7 +216,6 @@ button:disabled:hover { transform: none; box-shadow: none; }
 .information-copy { padding-bottom: 18px; }
 .information-copy p { color: #bdb7ad; font-size: 13px; line-height: 1.8; }
 .information-copy p + p { margin-top: 10px; }
-.information-status { display: inline-block; margin-bottom: 10px; padding: 4px 8px; border: 1px solid #b3936640; border-radius: 4px; color: #dbbd91; font-size: 10px; line-height: 1.5; }
 .information-sources { border-top: 1px solid var(--line); padding-top: 16px; font-size: 10px; line-height: 1.8; }
 .information-sources p { color: #a59e93; margin-bottom: 7px; }
 .information-sources a { display: block; color: #c9b18c; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
@@ -406,6 +435,16 @@ button:disabled:hover { transform: none; box-shadow: none; }
   .size-help-inner > div { min-width: 0; flex-basis: 100%; }
   .owner-card { grid-template-columns: 90px 1fr; } .owner-copy { padding-inline: 14px; }
   .dialog-actions .btn-primary,.dialog-actions .btn-secondary { font-size: 11px; }
+}
+@media (max-width: 520px) {
+  .fitline-facts { gap: 8px; }
+  .fitline-facts strong { font-size: 12px; }
+  .fitline-facts span { font-size: 10px; }
+  .fitline-purpose { font-size: 13px; }
+  .fitline-usage { padding: 13px; }
+  .usage-facts { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 5px; }
+  .usage-facts span { font-size: 11px; }
+  .fitline-nutrition table { font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }

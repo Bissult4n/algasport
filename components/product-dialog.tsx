@@ -18,7 +18,7 @@ import {
 import { CUSTOMIZATION_PRICES } from "@/lib/shop-config";
 import { Arrow, Dialog, Photo, Quantity } from "./shop-ui";
 import { PatchPreview } from "./patch-preview";
-import { FitLineInformation } from "./fitline-information";
+import { FitLineInformation, FitLineOverview } from "./fitline-information";
 
 export function ProductDialog({
   product,
@@ -129,11 +129,11 @@ export function ProductDialog({
                 ))}
               </div>
             )}
-            <p className="muted photo-note">
+            {product.category !== "vitamins" && <p className="muted photo-note">
               {product.images.length
                 ? "Реальные фото модели. Цвет и комплектацию подтвердим в переписке."
                 : "Точная модель и фотография ожидают подтверждения магазина."}
-            </p>
+            </p>}
             {c.enabled && (
               <div className="desktop-preview">
                 <PatchPreview value={c} />
@@ -144,7 +144,7 @@ export function ProductDialog({
             <p className="label">
               {product.brand} / {categoryName(product.category)}
             </p>
-            <p className="detail-description">{product.description}</p>
+            {product.category === "vitamins" ? <FitLineOverview productId={product.id} /> : <p className="detail-description">{product.description}</p>}
             <p className="detail-price">{priceText(product.price)}</p>
             <p className="muted small-copy">
             {product.availability || "Наличие и окончательную стоимость уточним при заказе."}
@@ -408,10 +408,10 @@ export function ProductDialog({
               </section>
             )}
             <FitLineInformation productId={product.id} />
-            <details className="product-info">
+            {product.category !== "vitamins" && <details className="product-info">
               <summary>О товаре и заказе</summary>
               <p>{product.detail}</p>
-            </details>
+            </details>}
             {error && (
               <p role="alert" className="error-copy">
                 {error}

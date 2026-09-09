@@ -30,11 +30,11 @@ add("adidas-champion-ii", "https://imssport.pl/pl/p/Judoga-Adidas-Champion-II-IJ
  "kimono/adidas-ii-detail.webp": ims + "productGfx_3239_500_500/J-IJF---Champion-II---White---Close-up-1.jpg"
 });
 for (const [id, number, image] of [
- ["activize","0708054","a430b976-4304-4ea1-a565-3f9e5017cc1c"],
- ["restorate","0702037","aeecd00f-5e15-44f0-8dd3-3ab204ca39cd"],
- ["basics","0705066","e4e2a54e-0bf6-4e1f-8f3c-dfbcd163cb22"],
- ["powercocktail","0705067","a37142eb-aa5d-45e6-bc8e-daadfbcd6a37"]
-]) add("fitline-" + id, "https://www.fitline.com/us/en-us/products/" + number,
+ ["activize","0708054","a1eed226-61ac-448b-8318-40134aef249f"],
+ ["restorate","0702037","b97de155-041f-4c10-a1a8-bd906d1a1159"],
+ ["basics","0705066","dfa31c61-2429-4a24-b2b8-3ab0cda6ce4d"],
+ ["powercocktail","0705067","c9351ecf-c5a8-45e2-bfcb-aa0439225f3b"]
+]) add("fitline-" + id, "https://www.fitline.com/kz/ru-ru/products/" + number,
  { ["fitline/" + id + ".webp"]: "https://cdn.pm-international.com/products/" + image + ".png" });
 const results = [];
 for (const job of jobs) {

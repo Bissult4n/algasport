@@ -191,42 +191,42 @@
   },
   {
     "id": "fitline-activize",
-    "source": "https://www.fitline.com/us/en-us/products/0708054",
+    "source": "https://www.fitline.com/kz/ru-ru/products/0708054",
     "file": "public/images/fitline/activize.webp",
-    "url": "https://cdn.pm-international.com/products/a430b976-4304-4ea1-a565-3f9e5017cc1c.png",
+    "url": "https://cdn.pm-international.com/products/a1eed226-61ac-448b-8318-40134aef249f.png",
     "width": 800,
     "height": 800,
-    "bytes": 68792,
-    "downloaded": "2026-09-09T00:18:37.183Z"
+    "bytes": 68156,
+    "downloaded": "2026-09-09T23:30:53.879Z"
   },
   {
     "id": "fitline-restorate",
-    "source": "https://www.fitline.com/us/en-us/products/0702037",
+    "source": "https://www.fitline.com/kz/ru-ru/products/0702037",
     "file": "public/images/fitline/restorate.webp",
-    "url": "https://cdn.pm-international.com/products/aeecd00f-5e15-44f0-8dd3-3ab204ca39cd.png",
+    "url": "https://cdn.pm-international.com/products/b97de155-041f-4c10-a1a8-bd906d1a1159.png",
     "width": 800,
     "height": 800,
-    "bytes": 56920,
-    "downloaded": "2026-09-09T00:18:37.632Z"
+    "bytes": 61584,
+    "downloaded": "2026-09-09T23:30:54.360Z"
   },
   {
     "id": "fitline-basics",
-    "source": "https://www.fitline.com/us/en-us/products/0705066",
+    "source": "https://www.fitline.com/kz/ru-ru/products/0705066",
     "file": "public/images/fitline/basics.webp",
-    "url": "https://cdn.pm-international.com/products/e4e2a54e-0bf6-4e1f-8f3c-dfbcd163cb22.png",
+    "url": "https://cdn.pm-international.com/products/dfa31c61-2429-4a24-b2b8-3ab0cda6ce4d.png",
     "width": 800,
     "height": 800,
-    "bytes": 56516,
-    "downloaded": "2026-09-09T00:18:38.126Z"
+    "bytes": 55952,
+    "downloaded": "2026-09-09T23:30:54.625Z"
   },
   {
     "id": "fitline-powercocktail",
-    "source": "https://www.fitline.com/us/en-us/products/0705067",
+    "source": "https://www.fitline.com/kz/ru-ru/products/0705067",
     "file": "public/images/fitline/powercocktail.webp",
-    "url": "https://cdn.pm-international.com/products/a37142eb-aa5d-45e6-bc8e-daadfbcd6a37.png",
-    "width": 800,
-    "height": 800,
-    "bytes": 60332,
-    "downloaded": "2026-09-09T00:18:38.571Z"
+    "url": "https://cdn.pm-international.com/products/c9351ecf-c5a8-45e2-bfcb-aa0439225f3b.png",
+    "width": 1000,
+    "height": 1000,
+    "bytes": 51422,
+    "downloaded": "2026-09-09T23:30:54.951Z"
   }
 ]

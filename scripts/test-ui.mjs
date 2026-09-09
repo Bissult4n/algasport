@@ -14,14 +14,39 @@ const server = spawn(process.execPath, ["scripts/preview.mjs"], {
 });
 let browser;
 const fitlineNames = ["Activize", "Restorate", "Basics", "PowerCocktail"];
-const informationTitles = ["Что это", "Для кого подходит", "Основные свойства", "Как принимать", "Состав", "Важная информация / предупреждения"];
 async function checkFitLineInformation(dialog) {
   const information = dialog.locator(".fitline-information");
-  assert.equal(await information.getByRole("heading", { name: "Подробнее", exact: true }).count(), 1);
-  assert.ok((await information.locator(".information-notice").textContent()).includes("не подтверждённые для поставки ALGA"));
+  assert.equal(await information.getByRole("heading", { name: "Подробнее о продукте", exact: true }).count(), 1);
+  assert.equal(await information.locator(".information-item").count(), 2);
+  assert.equal(await dialog.locator(".fitline-overview").count(), 1);
+  assert.ok((await dialog.locator(".fitline-facts").textContent()).trim().length > 30);
+  assert.ok((await information.locator(".fitline-audience").textContent()).trim().length > 30);
+  assert.ok((await information.locator(".fitline-usage").textContent()).includes("Порция"));
+  const name = await dialog.getAttribute("aria-label");
+  const usage = await information.locator(".fitline-usage").textContent();
+  const expectedUsage = {
+    "FitLine Activize": ["1,67 г", "40–50 мл", "2–3 раза", "после еды", "Не принимайте вечером"],
+    "FitLine Restorate": ["6,7 г", "100 мл", "комнатной температуры", "во время еды", "1 месяц"],
+    "FitLine Basics": ["12 г", "180 мл", "один раз"],
+    "FitLine PowerCocktail": ["7,5 г", "100 мл", "перед завтраком", "2–3 недели"],
+  };
+  for (const expected of expectedUsage[name]) assert.ok(usage.includes(expected), name + ": " + expected);
+  const nutrition = information.locator(".fitline-nutrition table");
+  if (name === "FitLine Basics") assert.equal(await nutrition.count(), 0, "Unverified DE table must not be used for Kazakhstan");
+  else {
+    assert.ok(await nutrition.locator("tbody tr").count() >= 5);
+    if (name === "FitLine Activize") assert.match(await nutrition.locator("caption").textContent(), /2 или 3 порциях/);
+    if (name === "FitLine PowerCocktail") {
+      assert.ok((await nutrition.locator("caption").textContent()).includes("7,5 г"));
+      assert.ok((await nutrition.getByRole("row", { name: "Кофеин 15 мг", exact: true }).count()) === 1);
+    }
+  }
+  assert.ok(await information.locator(".fitline-warnings").isVisible(), "Warnings visible without opening an accordion");
+  assert.doesNotMatch(await information.textContent(), /Требует подтверждения|уточним позже|для тех, кто рассматривает|США|DFE/);
+  assert.ok((await information.locator(".fitline-properties").textContent()).includes("нормальн"));
+  assert.ok((await information.locator(".information-sources a").first().getAttribute("href")).includes("/kz/ru-ru/"));
   const sections = information.locator(".information-item");
-  assert.equal(await sections.count(), 6);
-  assert.equal(await sections.first().getAttribute("open"), "");
+  const informationTitles = ["Полный состав", "Чем отличается от других FitLine"];
   for (let i = 0; i < informationTitles.length; i++) {
     const section = sections.nth(i);
     const summary = section.locator("summary");
@@ -29,9 +54,6 @@ async function checkFitLineInformation(dialog) {
     if (await section.getAttribute("open") === null) await summary.click();
     assert.ok(await section.locator(".information-copy").isVisible());
     assert.ok((await section.locator(".information-copy").textContent()).trim().length > 30);
-    if (["Как принимать", "Состав"].includes(informationTitles[i])) {
-      assert.equal(await section.locator(".information-status").textContent(), "Требует подтверждения");
-    }
     await summary.press("Enter");
     assert.equal(await section.getAttribute("open"), null, "Keyboard closes " + informationTitles[i]);
     assert.ok(await dialog.isVisible(), "Accordion does not submit order form");
@@ -39,7 +61,7 @@ async function checkFitLineInformation(dialog) {
   for (const link of await information.locator(".information-sources a").all()) {
     const href = new URL(await link.getAttribute("href"));
     assert.equal(href.protocol, "https:");
-    assert.ok(["www.fitline.com", "cdn.pm-international.com"].includes(href.hostname));
+    assert.ok(["www.fitline.com", "cdn.pm-international.com", "cdn.brandfolder.io"].includes(href.hostname));
     assert.equal(href.search, "", "No referral parameters on source links");
     assert.equal(await link.getAttribute("target"), "_blank");
     assert.match(await link.getAttribute("rel"), /noopener/);
@@ -105,7 +127,9 @@ try {
       assert.equal(await card.locator(".fitline-information").count(), 0, "Catalog remains concise");
       await checkFitLineInformation(dialog);
       if (name === "FitLine Activize") {
-        await dialog.locator(".information-item").nth(3).locator("summary").click();
+        await dialog.locator(".fitline-overview").scrollIntoViewIfNeeded();
+        await page.screenshot({ path: artifacts + "/fitline-overview-desktop.png" });
+        await dialog.locator(".information-item").nth(0).locator("summary").click();
         await dialog.locator(".fitline-information").scrollIntoViewIfNeeded();
         await page.screenshot({ path: artifacts + "/fitline-desktop.png" });
       }
@@ -228,14 +252,16 @@ try {
     await mobile.goto(url + "#product/fitline-" + name.toLowerCase());
     const fitlineModal = mobile.locator("dialog");
     await checkFitLineInformation(fitlineModal);
-    await fitlineModal.locator(".information-item").nth(4).locator("summary").click();
+    await fitlineModal.locator(".information-item").nth(0).locator("summary").click();
     for (const width of [320, 390]) {
       await mobile.setViewportSize({ width, height: 844 });
       assert.ok(await fitlineModal.evaluate(element => element.scrollWidth <= element.clientWidth), "FitLine modal overflow: " + name);
     }
     if (name === "Activize") {
-      await fitlineModal.locator(".information-item").nth(4).scrollIntoViewIfNeeded();
+      await fitlineModal.locator(".fitline-overview").scrollIntoViewIfNeeded();
       await mobile.screenshot({ path: artifacts + "/fitline-mobile.png" });
+      await fitlineModal.locator(".fitline-usage").scrollIntoViewIfNeeded();
+      await mobile.screenshot({ path: artifacts + "/fitline-usage-mobile.png" });
     }
     await fitlineModal.getByRole("button", { name: "Оформить", exact: true }).click();
     assert.ok((await mobile.getByLabel("Текст заказа").inputValue()).includes("FitLine " + name));
@@ -276,7 +302,7 @@ try {
   assert.deepEqual(errors, []);
   assert.deepEqual(failures, []);
   assert.ok(requests.every(request => request.startsWith(url) || request.startsWith("https://wa.me/") || request.startsWith("https://www.instagram.com/")), "Unexpected external runtime dependency");
-  console.log("PASS: all 12 products and galleries; all 4 FitLine information panels, keyboard, regional notices and mobile orders; filters/search; cart add/edit/remove/limits/persistence; cross-tab and blocked storage; Unicode/customization; order/copy; intercepted WhatsApp/Instagram links; anchors; FAQ; mobile 320-768; no console errors or broken assets.");
+  console.log("PASS: all 12 products and galleries; all 4 FitLine overviews, nutrition tables, accordions and mobile orders; filters/search; cart add/edit/remove/limits/persistence; cross-tab and blocked storage; Unicode/customization; order/copy; intercepted WhatsApp/Instagram links; anchors; FAQ; mobile 320-768; no console errors or broken assets.");
 } finally {
   await browser?.close();
   if (server.exitCode === null) {
