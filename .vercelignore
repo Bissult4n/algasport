@@ -1,0 +1,14 @@
+.local-tools
+.next
+.pnpm-store
+node_modules
+design-assets
+integrations
+.env*
+*.log
+*.tsbuildinfo
+out
+test-results
+playwright-report
+.cache
+coverage
