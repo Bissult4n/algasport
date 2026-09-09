@@ -18,6 +18,7 @@ import {
 import { CUSTOMIZATION_PRICES } from "@/lib/shop-config";
 import { Arrow, Dialog, Photo, Quantity } from "./shop-ui";
 import { PatchPreview } from "./patch-preview";
+import { FitLineInformation } from "./fitline-information";
 
 export function ProductDialog({
   product,
@@ -406,6 +407,7 @@ export function ProductDialog({
                 )}
               </section>
             )}
+            <FitLineInformation productId={product.id} />
             <details className="product-info">
               <summary>О товаре и заказе</summary>
               <p>{product.detail}</p>
