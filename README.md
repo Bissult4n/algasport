@@ -2,16 +2,18 @@
 
 Статический мобильный каталог на Next.js, React и Tailwind CSS. Production build создаёт `out/`: на хостинге не нужны Node.js-сервер, база данных, API или Google Sheets. Корзина хранится в браузере, заказ оформляется сообщением в WhatsApp.
 
-Публичная тестовая версия: [ALGA Sport Shop staging](https://alga-sport-shops-2db1p7uia-bissultan-s-projects.vercel.app). Это preview, не коммерческий запуск: `noindex, nofollow`, WhatsApp отключён, текст заказа можно скопировать. Результат проверки: `docs/staging-deployment.md`.
+Основной адрес: [ALGA Sport Shop](https://alga-sport-shops.vercel.app). Репозиторий: [Bissult4n/algasport](https://github.com/Bissult4n/algasport). Push в `main` автоматически обновляет production, остальные ветки получают отдельные preview deployments в том же Vercel-проекте. Порядок работы: `docs/deployment-workflow.md`.
+
+Это пока тестовый магазин, несмотря на техническое название production: `noindex, nofollow`, WhatsApp отключён, текст заказа можно скопировать. Исторический отчёт о первом CLI-preview: `docs/staging-deployment.md`.
 
 ## Запуск на Другом Ноутбуке
 
-Установите Git и Node.js 24.x с npm (версия указана в `.nvmrc` и `package.json`). Замените `<REPO_URL>` настоящим адресом своего репозитория:
+Установите Git и Node.js 24.x с npm (версия указана в `.nvmrc` и `package.json`):
 
 ```sh
-git clone <REPO_URL> alga-sport
+git clone https://github.com/Bissult4n/algasport.git alga-sport
 cd alga-sport
-npm install
+npm ci
 npm run dev
 ```
 
@@ -75,24 +77,23 @@ npm audit
 
 ## GitHub и Перенос
 
-Staging-состояние сохраняется локальным коммитом `Prepare ALGA Sport Shop staging deployment` на ветке `main`. Remote не задан: URL должен предоставить владелец. `npm run check:repo` проверяет кандидаты на добавление, изображения, lockfile, исключения и распространённые форматы секретов; он не заменяет просмотр файлов перед публикацией.
+Исходники опубликованы в существующем репозитории [Bissult4n/algasport](https://github.com/Bissult4n/algasport). `origin` указывает на этот репозиторий, `main` отслеживает `origin/main`. Не создавайте второй remote или дубликат проекта. `npm run check:repo` проверяет кандидаты на добавление, изображения, lockfile, исключения и распространённые форматы секретов; он не заменяет просмотр файлов перед публикацией.
 
-После создания своего пустого репозитория на GitHub:
+После проверки и фиксации изменений в `main`:
 
 ```sh
 git status --short
 npm run check:repo
-git remote add origin <REPO_URL>
-git push -u origin main
+git push origin main
 ```
 
-Не повторяйте `remote add`, если remote уже существует; проверьте `git remote -v`. Для следующих собственных коммитов настройте свои `user.name` и `user.email`. Первый снимок использует явно технического автора Codex, без личного email владельца; глобальная конфигурация Git не меняется.
+На другом ноутбуке настройте собственные `user.name` и `user.email`; email должен быть связан с вашим GitHub-аккаунтом (можно использовать его noreply-адрес). GitHub и Vercel авторизуются отдельно, токены в репозитории не хранятся. Первый снимок использует технического автора Codex; его история не переписывалась. Глобальная конфигурация Git не менялась.
 
 В Git входят исходники, конфигурация, `public/`, документация, тесты и npm lockfile. `.gitignore` исключает зависимости, сборки, кеш, env-файлы кроме `.env.example`, ключи, `.vercel`, результаты тестов и `design-assets/`. Последняя папка содержит только исходные референсы и архивные неиспользуемые изображения, для сайта она не нужна. Приватные скриншоты историй не входят в `public/` и не публикуются.
 
-## Vercel: Тестовый Деплой
+## Vercel: Автоматическая Публикация
 
-Используется существующий Vercel-проект `alga-sport-shops`; дубликат не создавался. Первый публичный preview опубликован напрямую через CLI, без GitHub. В дальнейшем подключите GitHub к этому же проекту. Root Directory: корень проекта. Существующий `vercel.json` задаёт:
+Используется существующий Vercel-проект `alga-sport-shops` в `bissultan-s-projects`; дубликат не создавался. Он подключён к GitHub-репозиторию `Bissult4n/algasport` через Vercel GitHub App. Production Branch: `main`. Другие ветки автоматически создают preview. GitHub Actions, deploy hooks и секреты для публикации не требуются. Root Directory: корень проекта. Существующий `vercel.json` и Node.js-настройки задают:
 
 | Поле | Значение |
 | --- | --- |
@@ -104,7 +105,7 @@ git push -u origin main
 
 Дополнительный конфиг, backend, серверные функции и SPA-rewrite не требуются. Товары и секции используют hash: `#product/zone-migaku`, `#catalog`, `#customize`. `.vercel` со старого ноутбука копировать не нужно. Не исключайте devDependencies при установке: они нужны для сборки.
 
-Staging уже опубликован; текущий production-домен не переключался. При последующих preview deployments сохраняйте пустой `NEXT_PUBLIC_WHATSAPP_NUMBER` и `NEXT_PUBLIC_ALLOW_INDEXING=false`. GitHub push пока не выполнялся. До коммерческого использования также подтвердите право использования фотографий поставщиков.
+При push в `main` после успешной облачной сборки обновляется `alga-sport-shops.vercel.app`. Preview-ветки этот адрес не переключают. В обоих окружениях сохраняйте пустой `NEXT_PUBLIC_WHATSAPP_NUMBER` и отключённый `NEXT_PUBLIC_ALLOW_INDEXING` (незаданное значение или `false`). Без env-переменных код уже использует эти безопасные значения. До коммерческого использования также подтвердите право использования фотографий поставщиков.
 
 ### Другие Статические Хостинги
 
