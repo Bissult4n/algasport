@@ -19,7 +19,7 @@ const secretPatterns = [
 for (const file of files) {
   if (forbidden.test(file)) problems.push("Excluded/private file is a Git candidate: " + file);
   const info = await stat(file);
-  if (!info.isFile() || /\.(webp|png|jpg|jpeg|ico)$/i.test(file)) continue;
+  if (!info.isFile() || /\.(webp|png|jpg|jpeg|ico|woff2)$/i.test(file)) continue;
   if (info.size > 5 * 1024 * 1024) { problems.push("Unexpected large text file: " + file); continue; }
   const text = await readFile(file, "utf8");
   if (secretPatterns.some(pattern => pattern.test(text))) problems.push("Possible credential in " + file);
@@ -31,7 +31,8 @@ for (const file of files) {
 }
 const required = ["package.json", "package-lock.json", "README.md", ".env.example", "next.config.mjs", "vercel.json", "public/.nojekyll", "public/images/alga-logo.webp", "public/images/alga-mark.webp"];
 const sources = JSON.parse(await readFile("docs/image-sources.json", "utf8"));
-for (const file of [...required, ...sources.map(source => source.file)]) {
+const previewSources = JSON.parse(await readFile("docs/personalization-image-sources.json", "utf8"));
+for (const file of [...required, ...sources.map(source => source.file), ...previewSources.map(source => source.file), "assets/fonts/noto-sans-jp-600.woff2", "assets/fonts/OFL.txt"]) {
   if (!candidateSet.has(file)) problems.push("Missing or ignored required file: " + file);
 }
 const lock = JSON.parse(await readFile("package-lock.json", "utf8"));

@@ -15,7 +15,7 @@ export type Embroidery = {
   enabled: boolean;
   type: "embroidery";
   text: string;
-  placement: "Куртка" | "Штаны";
+  placement: "Куртка" | "Штаны" | "Пояс";
   color: keyof typeof embroideryColors;
   font: "Modern" | "Serif" | "Brush";
   orientation: "horizontal" | "vertical";
@@ -41,7 +41,9 @@ export const defaultEmbroidery = (): Embroidery => ({
 export const placementText = (c: Embroidery) =>
   c.placement === "Куртка"
     ? "Куртка / нижняя часть"
-    : "Штаны / верхняя часть штанины";
+    : c.placement === "Штаны"
+      ? "Штаны / верхняя часть штанины"
+      : "Пояс / возле одного из концов";
 
 export function parseCustomization(raw: unknown): Customization | null {
   if (!raw || typeof raw !== "object") return null;
@@ -84,7 +86,7 @@ export function parseCustomization(raw: unknown): Customization | null {
   )
     return null;
   const legacy = ["Спина", "Грудь", "Другое"].includes(String(c.placement));
-  if (!legacy && !["Куртка", "Штаны"].includes(String(c.placement)))
+  if (!legacy && !["Куртка", "Штаны", "Пояс"].includes(String(c.placement)))
     return null;
   const legacyNote = legacy
     ? "Прежнее место: " + c.placement + ". Новое размещение нужно согласовать."

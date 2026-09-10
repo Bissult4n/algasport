@@ -114,6 +114,7 @@ try {
     assert.equal(await dialog.getAttribute("aria-label"), name);
     const mainPhoto = dialog.locator(".gallery-main img");
     if (await mainPhoto.count()) {
+      await mainPhoto.scrollIntoViewIfNeeded();
       await mainPhoto.evaluate(img => img.decode());
       await dialog.getByRole("button", { name: "Увеличить фото" }).click();
       assert.equal(await dialog.locator(".gallery-main.zoomed").count(), 1);
@@ -135,6 +136,7 @@ try {
       }
     } else assert.equal(await dialog.locator(".fitline-information").count(), 0);
     await dialog.getByRole("button", { name: "Закрыть", exact: true }).click();
+    console.log("Checked product:", name);
   }
 
   await cards.first().getByRole("button", { name: "Добавить в корзину", exact: true }).click();
@@ -167,9 +169,14 @@ try {
   await page.locator(".cart-button").click();
   await dialog.getByRole("button", { name: "Оформить заказ", exact: true }).click();
   const message = await dialog.getByLabel("Текст заказа").inputValue();
+  console.log("Checked personalized cart and order");
   for (const part of ["Zone Migaku", "FitLine Activize", "180 см, 75 кг", "柔道・Алға & +", "Штаны / верхняя часть штанины", "Горизонтально", "Цена по запросу"]) assert.ok(message.includes(part), part);
+  await page.bringToFront();
   await dialog.getByRole("button", { name: "Скопировать заказ" }).click();
-  assert.equal((await page.evaluate(() => navigator.clipboard.readText())).replace(/\r\n/g, "\n"), message);
+  assert.equal((await page.evaluate(() => Promise.race([
+    navigator.clipboard.readText(),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("Clipboard read timed out")), 5000)),
+  ]))).replace(/\r\n/g, "\n"), message);
   const whatsapp = dialog.getByRole("link", { name: "Открыть WhatsApp" });
   let phonePath = null;
   if (await whatsapp.count()) {
@@ -187,6 +194,7 @@ try {
   } else assert.ok(await dialog.getByRole("button", { name: "WhatsApp пока не подключен" }).isDisabled());
   await page.keyboard.press("Escape");
   const instagram = page.locator(".instagram-link");
+  console.log("Checked clipboard and WhatsApp state");
   const instagramUrl = await instagram.getAttribute("href");
   assert.match(instagramUrl, /^https:\/\/www\.instagram\.com\/[A-Za-z0-9_.]+\/$/);
   const instagramPopup = context.waitForEvent("page");
@@ -245,7 +253,8 @@ try {
     await mobile.evaluate(y => scrollTo({ top: y, behavior: "instant" }), y);
     await mobile.waitForTimeout(30);
   }
-  await mobile.locator("img").evaluateAll(images => Promise.all(images.map(image => image.decode())));
+  // Hidden desktop-only photos remain lazy on mobile and must not block decoding.
+  await mobile.locator("img").evaluateAll(images => Promise.all(images.filter(image => image.getClientRects().length).map(image => image.decode())));
   await mobile.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
   await mobile.screenshot({ path: artifacts + "/mobile.png" });
   for (const name of fitlineNames) {

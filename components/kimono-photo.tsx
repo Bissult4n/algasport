@@ -13,6 +13,7 @@ export function KimonoPhoto({ back = false }: { back?: boolean }) {
     <svg
       className="kimono-cutout"
       viewBox={back ? "0 0 260 500" : "0 0 281 500"}
+      preserveAspectRatio="xMidYMid meet"
       role="img"
       aria-label={
         "Реальное фото Adidas Champion II, " +

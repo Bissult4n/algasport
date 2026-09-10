@@ -23,10 +23,12 @@ import { ProductDialog } from "./product-dialog";
 import { CartDialog, OrderDialog } from "./cart-dialog";
 import { KimonoPhoto } from "./kimono-photo";
 import { OwnersSection } from "./owners-section";
+import { ZoneComparison } from "./zone-comparison";
 
 type View =
   | { type: "product"; id: string; initial?: CartItem }
   | { type: "cart" }
+  | { type: "compare" }
   | { type: "order"; items: CartItem[] }
   | null;
 
@@ -409,6 +411,12 @@ export function Storefront() {
               />
             </label>
           </div>
+          {(category === "all" || category === "kimono") && (
+            <div className="comparison-entry">
+              <p><strong>ZONE / MITSUBOSHI</strong> Не знаете, какую модель выбрать?</p>
+              <button className="btn-secondary" onClick={() => setView({ type: "compare" })}>Сравнить модели <Arrow /></button>
+            </div>
+          )}
           <p className="catalog-note">
             Цены по запросу · Размеры, варианты и наличие подтверждаем в
             переписке
@@ -691,6 +699,13 @@ export function Storefront() {
           }
           onEdit={(item) => openProduct(getProduct(item.productId)!, item)}
           onOrder={() => setView({ type: "order", items: cart })}
+        />
+      )}
+      {view?.type === "compare" && (
+        <ZoneComparison
+          onClose={close}
+          onChoose={id => openProduct(getProduct(id)!)}
+          onHelp={() => setView({ type: "order", items: [] })}
         />
       )}
       {view?.type === "order" && (

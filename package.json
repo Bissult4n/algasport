@@ -11,7 +11,8 @@
     "lint": "tsc --noEmit",
     "test": "node scripts/test-orders.mjs",
     "check:static": "node scripts/check-static.mjs",
-    "test:ui": "node scripts/test-ui.mjs",
+    "test:ui": "node scripts/test-ui.mjs && node scripts/test-personalization.mjs",
+    "test:personalization": "node scripts/test-personalization.mjs",
     "check:repo": "node scripts/check-repo.mjs"
   },
   "dependencies": {

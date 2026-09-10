@@ -109,6 +109,15 @@ try {
   for (const label of ["Фамилия:", "Страна:"])
     assert.ok(!stitchMessage.includes(label));
   assert.deepEqual(o.parseCart(JSON.stringify([stitched])), [stitched]);
+  for (const orientation of ["vertical", "horizontal"]) {
+    const belt = { ...stitched, customization: { ...stitched.customization, placement: "Пояс", orientation, text: "柔道 勝 Алға ӘҒҚҢӨҰҮҺІ ALGA" } };
+    assert.deepEqual(o.parseCart(JSON.stringify([belt])), [belt], "Belt survives cart persistence");
+    const message = o.buildOrderMessage([belt]);
+    for (const value of ["Пояс / возле одного из концов", belt.customization.text, "Цвет: Золотой", orientation === "vertical" ? "Вертикально" : "Горизонтально"])
+      assert.ok(message.includes(value), value);
+    assert.equal(new URL(o.whatsappUrl(message, "77001234567")).searchParams.get("text"), message);
+  }
+  assert.equal(c.parseCustomization({ ...stitched.customization, placement: "Unknown" }), null);
   assert.equal(
     new URL(o.whatsappUrl(stitchMessage, "77001234567")).searchParams.get(
       "text",

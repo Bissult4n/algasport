@@ -322,11 +322,14 @@ export function ProductDialog({
                             >
                               <option>Куртка</option>
                               <option>Штаны</option>
+                              <option>Пояс</option>
                             </select>
                             <small>
                               {embroidery.placement === "Куртка"
                                 ? "Нижняя часть куртки"
-                                : "Верхняя часть штанины"}
+                                : embroidery.placement === "Штаны"
+                                  ? "Верхняя часть штанины"
+                                  : "Возле одного из концов пояса"}
                             </small>
                           </label>
                           <label className="input-label">
