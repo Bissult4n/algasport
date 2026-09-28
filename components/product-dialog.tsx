@@ -32,6 +32,7 @@ import {
   localizedVariantLabel,
 } from "@/lib/i18n/catalog";
 import { CUSTOMIZATION_PRICES } from "@/lib/shop-config";
+import { toJapaneseEmbroidery } from "@/lib/japanese";
 import { Arrow, Dialog, Photo, Quantity } from "./shop-ui";
 import { PatchPreview } from "./patch-preview";
 import { FitLineInformation, FitLineOverview } from "./fitline-information";
@@ -116,7 +117,11 @@ export function ProductDialog({
       ? defaultCustomization()
       : c.type === "backpatch"
         ? { ...c, surname: c.surname.trim() }
-        : { ...c, text: c.text.trim() };
+        : {
+            ...c,
+            sourceText: (c.sourceText || c.text).trim(),
+            text: toJapaneseEmbroidery(c.sourceText || c.text),
+          };
     const clean = { ...item, size: item.size.trim(), customization };
     const button = (e.nativeEvent as SubmitEvent).submitter;
     if (button?.getAttribute("value") === "order") onOrder(clean);
@@ -399,18 +404,33 @@ export function ProductDialog({
                           {t("custom.modeEmbroidery")}
                         </p>
                         <label className="input-label">
-                          {t("custom.text")}
+                          {t("custom.sourceText")}
                           <input
-                            aria-label={t("custom.text")}
+                            aria-label={t("custom.sourceText")}
                             className="field"
                             required
-                            placeholder={t("custom.textPlaceholder")}
-                            value={embroidery.text}
+                            placeholder={t("custom.sourceTextPlaceholder")}
+                            value={embroidery.sourceText ?? embroidery.text}
                             maxLength={40}
-                            onChange={(e) =>
-                              updateEmbroidery({ text: e.target.value })
-                            }
+                            onChange={(e) => {
+                              const sourceText = e.target.value;
+                              updateEmbroidery({
+                                sourceText,
+                                text: toJapaneseEmbroidery(sourceText),
+                              });
+                            }}
                           />
+                        </label>
+                        <label className="input-label">
+                          {t("custom.japaneseText")}
+                          <input
+                            aria-label={t("custom.japaneseText")}
+                            className="field"
+                            lang="ja"
+                            readOnly
+                            value={embroidery.text}
+                          />
+                          <small>{t("custom.japaneseHint")}</small>
                         </label>
                         <div className="option-grid">
                           <label className="input-label">

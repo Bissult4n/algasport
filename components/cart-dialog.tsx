@@ -23,6 +23,7 @@ import {
   localizedVariant,
   localizedVariantLabel,
 } from "@/lib/i18n/catalog";
+import { toJapaneseEmbroidery } from "@/lib/japanese";
 
 export function CartDialog({
   items,
@@ -107,7 +108,11 @@ export function CartDialog({
                         </>
                       ) : (
                         <>
-                          {t("cart.embroidery", { text: item.customization.text })}
+                          {t("cart.embroidery", {
+                            text: toJapaneseEmbroidery(
+                              item.customization.sourceText || item.customization.text,
+                            ),
+                          })}
                           <br />
                           {item.customization.legacyNote
                             ? t("orderMessage.needsAgreement")

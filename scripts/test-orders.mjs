@@ -26,6 +26,7 @@ try {
   );
   const o = require(join(output, "orders.js"));
   const c = require(join(output, "customization.js"));
+  const j = require(join(output, "japanese.js"));
   const config = require(join(output, "shop-config.js"));
   const catalog = require(join(output, "catalog.js"));
   const item = o.newItem("zone-migaku", "Синий");
@@ -101,7 +102,8 @@ try {
     customization: {
       ...c.defaultEmbroidery(),
       enabled: true,
-      text: "柔道・Алға & +",
+      sourceText: "柔道 Алға",
+      text: j.toJapaneseEmbroidery("柔道 Алға"),
       placement: "Штаны",
       color: "Золотой",
       orientation: "horizontal",
@@ -110,8 +112,8 @@ try {
   const stitchMessage = o.buildOrderMessage([stitched]);
   for (const label of [
     "Вариант/цвет: Синий",
-    "Текст: 柔道・Алға & +",
-    "Штаны / нижняя часть штанины",
+    "Текст: 柔道・前進",
+    "Штаны / верхняя боковая часть штанов",
     "Цвет: Золотой",
     "Ориентация: Горизонтально",
   ])
@@ -124,8 +126,8 @@ try {
     "Сәлеметсіз бе! Тапсырыс бергім келеді.",
     "Тауар: Adidas Champion II",
     "Нұсқа/түс: Көк",
-    "Мәтін: 柔道・Алға & +",
-    "Шалбар / шалбар балағының төменгі бөлігі",
+    "Мәтін: 柔道・前進",
+    "Шалбар / шалбардың жоғарғы бүйір бөлігі",
     "Бағасы: Сұрау бойынша",
   ]) assert.ok(kkMessage.includes(value), "KZ order: " + value);
   assert.ok(!kkMessage.includes("Здравствуйте"), "KZ order must not contain the Russian greeting");
@@ -134,8 +136,8 @@ try {
     "Hello! I would like to place an order.",
     "Product: Adidas Champion II",
     "Option/color: Blue",
-    "Text: 柔道・Алға & +",
-    "Trousers / lower trouser leg",
+    "Text: 柔道・前進",
+    "Trousers / upper outer trouser area",
     "Price: Price on request",
   ]) assert.ok(enMessage.includes(value), "EN order: " + value);
   assert.ok(!enMessage.includes("Здравствуйте"), "EN order must not contain the Russian greeting");
@@ -337,7 +339,8 @@ try {
     "Китайский",
   );
   for (const orientation of ["vertical", "horizontal"]) {
-    const belt = { ...stitched, customization: { ...stitched.customization, placement: "Пояс", orientation, text: "柔道 勝 Алға ӘҒҚҢӨҰҮҺІ ALGA" } };
+    const sourceText = "柔道 победа Алға Сериков";
+    const belt = { ...stitched, customization: { ...stitched.customization, placement: "Пояс", orientation, sourceText, text: j.toJapaneseEmbroidery(sourceText) } };
     assert.deepEqual(o.parseCart(JSON.stringify([belt])), [belt], "Belt survives cart persistence");
     const message = o.buildOrderMessage([belt]);
     for (const value of ["Пояс / возле одного из концов", belt.customization.text, "Цвет: Золотой", orientation === "vertical" ? "Вертикально" : "Горизонтально"])
@@ -345,6 +348,11 @@ try {
     assert.equal(new URL(o.whatsappUrl(message, "77001234567")).searchParams.get("text"), message);
   }
   assert.equal(c.parseCustomization({ ...stitched.customization, placement: "Unknown" }), null);
+  assert.equal(j.toJapaneseEmbroidery("победа"), "勝利");
+  assert.equal(j.toJapaneseEmbroidery("victory"), "勝利");
+  assert.equal(j.toJapaneseEmbroidery("柔道"), "柔道");
+  assert.ok(j.isJapaneseEmbroidery(j.toJapaneseEmbroidery("A. SERIKOV")));
+  assert.doesNotMatch(j.toJapaneseEmbroidery("Сериков"), /[A-Za-zА-Яа-я]/);
   assert.equal(
     new URL(o.whatsappUrl(stitchMessage, "77001234567")).searchParams.get(
       "text",

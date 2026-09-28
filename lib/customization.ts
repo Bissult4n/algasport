@@ -14,6 +14,7 @@ export const embroideryColors = {
 export type Embroidery = {
   enabled: boolean;
   type: "embroidery";
+  sourceText?: string;
   text: string;
   placement: "Куртка" | "Штаны" | "Пояс";
   color: keyof typeof embroideryColors;
@@ -32,6 +33,7 @@ export const defaultCustomization = (): Backpatch => ({
 export const defaultEmbroidery = (): Embroidery => ({
   enabled: false,
   type: "embroidery",
+  sourceText: "",
   text: "",
   placement: "Куртка",
   color: "Синий",
@@ -87,13 +89,19 @@ export function parseCustomization(raw: unknown): Customization | null {
     };
   }
   if (c.type !== "embroidery") return null;
-  const text = typeof c.text === "string" ? c.text : c.surname;
+  const sourceText = typeof c.sourceText === "string" && c.sourceText.trim()
+    ? c.sourceText
+    : typeof c.text === "string"
+      ? c.text
+      : c.surname;
   if (
-    typeof text !== "string" ||
-    text.length > 40 ||
-    (c.enabled && !text.trim())
+    typeof sourceText !== "string" ||
+    sourceText.length > 40 ||
+    (c.enabled && !sourceText.trim())
   )
     return null;
+  const text = toJapaneseEmbroidery(sourceText);
+  if (c.enabled && !isJapaneseEmbroidery(text)) return null;
   if (
     typeof c.color !== "string" ||
     !Object.prototype.hasOwnProperty.call(embroideryColors, c.color)
@@ -116,6 +124,7 @@ export function parseCustomization(raw: unknown): Customization | null {
   return {
     enabled: c.enabled,
     type: "embroidery",
+    sourceText: sourceText.trim(),
     text,
     placement: legacy ? "Куртка" : (c.placement as Embroidery["placement"]),
     color: c.color as Embroidery["color"],
@@ -126,3 +135,4 @@ export function parseCustomization(raw: unknown): Customization | null {
 }
 import { translate, type Locale } from "./i18n";
 import type { TranslationKey } from "./i18n/ru";
+import { isJapaneseEmbroidery, toJapaneseEmbroidery } from "./japanese";

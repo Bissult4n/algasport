@@ -25,6 +25,7 @@ import {
   localizedVariant,
   localizedVariantLabel,
 } from "./i18n/catalog";
+import { toJapaneseEmbroidery } from "./japanese";
 export { defaultCustomization } from "./customization";
 export type { Customization } from "./customization";
 export type CartItem = {
@@ -126,7 +127,8 @@ export function buildOrderMessage(items: CartItem[], locale: Locale = "ru"): str
                       translate(locale, "custom.back") + " · " + translate(locale, "custom.fixed"),
                   ]
                 : [
-                    translate(locale, "orderMessage.text") + ": " + c.text,
+                    translate(locale, "orderMessage.text") + ": " +
+                      toJapaneseEmbroidery(c.sourceText || c.text),
                     translate(locale, "orderMessage.place") + ": " +
                       (c.legacyNote
                         ? translate(locale, "orderMessage.needsAgreement")

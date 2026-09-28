@@ -259,7 +259,15 @@ try {
         "Сериков",
         "か\u3099",
       ]) {
-        await modal.getByLabel("Текст вышивки").fill(text);
+        await modal.getByLabel("Исходный текст").fill(text);
+        const japaneseText = await modal.getByLabel("Надпись на японском").inputValue();
+        assert.match(
+          japaneseText,
+          /^[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}々〆ヵヶー・、。]+$/u,
+          `${text} must be converted to Japanese`,
+        );
+        if (text === "Алға" || text === "ALGA") assert.equal(japaneseText, "前進");
+        if (text === "柔道") assert.equal(japaneseText, "柔道");
         for (const font of ["Modern", "Serif", "Brush"]) {
           await modal.getByLabel("Шрифт", { exact: true }).selectOption(font);
           for (const orientation of ["horizontal", "vertical"]) {
@@ -267,7 +275,7 @@ try {
             const letters = preview.locator('defs g[id$="letters"]');
             assert.equal(
               (await letters.textContent()).normalize("NFC"),
-              text.normalize("NFC"),
+              japaneseText.normalize("NFC"),
             );
             assert.equal(
               await preview
@@ -278,7 +286,7 @@ try {
           }
         }
       }
-      await modal.getByLabel("Текст вышивки").fill("柔道");
+      await modal.getByLabel("Исходный текст").fill("柔道");
       await modal.getByLabel("Шрифт", { exact: true }).selectOption("Modern");
       for (const [color, hex] of Object.entries({
         Синий: "#183c79",
@@ -321,7 +329,8 @@ try {
       await modal.getByLabel("Место нанесения").selectOption(settings.placement);
       await modal.getByLabel("Цвет нити").selectOption(settings.color);
       await modal.getByLabel("Ориентация").selectOption(settings.orientation);
-      await modal.getByLabel("Текст вышивки").fill("柔道 Алға");
+      await modal.getByLabel("Исходный текст").fill("柔道 Алға");
+      assert.equal(await modal.getByLabel("Надпись на японском").inputValue(), "柔道・前進");
       await modal.getByRole("button", { name: "Добавить в корзину", exact: true }).click();
     }
     await page.reload({ waitUntil: "networkidle" });
@@ -332,7 +341,8 @@ try {
     for (const settings of savedZones) {
       const { customization } = cart.find((item) => item.customization.placement === settings.placement);
       for (const [key, value] of Object.entries(settings)) assert.equal(customization[key], value);
-      assert.equal(customization.text, "柔道 Алға");
+      assert.equal(customization.sourceText, "柔道 Алға");
+      assert.equal(customization.text, "柔道・前進");
     }
     await page.locator(".cart-button").click();
     assert.match(
@@ -351,7 +361,7 @@ try {
     const order = await modal.getByLabel("Текст заказа").inputValue();
     for (const expected of [
       "Пояс / возле одного из концов",
-      "柔道 Алға",
+      "柔道・前進",
       "Вертикально",
       "Золотой",
     ])
@@ -360,9 +370,9 @@ try {
     await page.locator(".cart-button").click();
     await modal.getByRole("button", { name: "Оформить заказ", exact: true }).click();
     const combinedOrder = await modal.getByLabel("Текст заказа").inputValue();
-    for (const expected of ["Куртка / нижняя передняя пола куртки", "Штаны / нижняя часть штанины", "Пояс / возле одного из концов", "Красный", "Синий", "Золотой", "Горизонтально", "Вертикально"])
+    for (const expected of ["Куртка / нижняя передняя пола куртки", "Штаны / верхняя боковая часть штанов", "Пояс / возле одного из концов", "Красный", "Синий", "Золотой", "Горизонтально", "Вертикально"])
       assert.ok(combinedOrder.includes(expected), "Combined cart order: " + expected);
-    assert.equal(combinedOrder.split("柔道 Алға").length - 1, 3);
+    assert.equal(combinedOrder.split("柔道・前進").length - 1, 3);
     await page.keyboard.press("Escape");
     await page.evaluate(() => localStorage.clear());
     await page.reload({ waitUntil: "networkidle" });

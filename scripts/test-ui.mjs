@@ -181,21 +181,22 @@ try {
   assert.deepEqual(await page.locator(".desktop-preview [data-backpatch-name-line]").allTextContents(), ["A. TESTOV"]);
   assert.equal(await page.locator(".desktop-preview [data-backpatch-country]").textContent(), "JPN");
   await dialog.getByRole("button", { name: "Вышивка", exact: true }).click();
-  await dialog.getByLabel("Текст вышивки").fill("柔道・Алға & +");
+  await dialog.getByLabel("Исходный текст").fill("柔道 Алға");
+  assert.equal(await dialog.getByLabel("Надпись на японском").inputValue(), "柔道・前進");
   await dialog.getByLabel("Место нанесения").selectOption("Штаны");
   await dialog.getByLabel("Цвет нити").selectOption("Золотой");
   await dialog.getByLabel("Ориентация").selectOption("horizontal");
   await dialog.getByRole("button", { name: "IJF backpatch", exact: true }).click();
   assert.equal(await dialog.getByLabel("Фамилия спортсмена").inputValue(), "A. TESTOV");
   await dialog.getByRole("button", { name: "Вышивка", exact: true }).click();
-  assert.equal(await dialog.getByLabel("Текст вышивки").inputValue(), "柔道・Алға & +");
+  assert.equal(await dialog.getByLabel("Исходный текст").inputValue(), "柔道 Алға");
   await dialog.getByRole("button", { name: "Сохранить изменения" }).click();
   await cards.filter({ hasText: "FitLine Activize" }).getByRole("button", { name: "Добавить в корзину", exact: true }).click();
   await page.locator(".cart-button").click();
   await dialog.getByRole("button", { name: "Оформить заказ", exact: true }).click();
   const message = await dialog.getByLabel("Текст заказа").inputValue();
   console.log("Checked personalized cart and order");
-  for (const part of ["Zone Migaku", "FitLine Activize", "180 см, 75 кг", "柔道・Алға & +", "Штаны / нижняя часть штанины", "Горизонтально", "Цена по запросу"]) assert.ok(message.includes(part), part);
+  for (const part of ["Zone Migaku", "FitLine Activize", "180 см, 75 кг", "柔道・前進", "Штаны / верхняя боковая часть штанов", "Горизонтально", "Цена по запросу"]) assert.ok(message.includes(part), part);
   await page.bringToFront();
   await dialog.getByRole("button", { name: "Скопировать заказ" }).click();
   assert.equal((await page.evaluate(() => Promise.race([
@@ -494,7 +495,7 @@ try {
     ["N.MARATOVA"],
   );
   await modal.getByRole("button", { name: "Вышивка", exact: true }).click();
-  await modal.getByLabel("Текст вышивки").fill("柔道");
+  await modal.getByLabel("Исходный текст").fill("柔道");
   for (const zone of ["Куртка", "Штаны"]) {
     await modal.getByLabel("Место нанесения").selectOption(zone);
     assert.equal(await mobile.locator(".mobile-preview [data-embroidery-zone]").getAttribute("data-embroidery-zone"), zone);
