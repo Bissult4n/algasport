@@ -24,24 +24,24 @@ const scenes = {
     background: "#c1d0e3",
     photoKey: "preview.judogiTemplatePhoto",
     x: 120,
-    y: 218,
-    angle: -2,
+    y: 204,
+    angle: 14,
     skew: -2,
-    size: 11,
-    length: 36,
-    width: 30,
+    size: 15,
+    length: 62,
+    width: 52,
   },
   Штаны: {
     file: "judogi-embroidery-template.png",
     background: "#c1d0e3",
     photoKey: "preview.judogiTemplatePhoto",
     x: 213,
-    y: 145,
-    angle: -1,
+    y: 135,
+    angle: 8,
     skew: 1,
-    size: 11,
-    length: 38,
-    width: 30,
+    size: 15,
+    length: 60,
+    width: 48,
   },
   Пояс: {
     file: "belt.webp",
@@ -90,6 +90,7 @@ export function EmbroideryPreview({ value }: { value: Embroidery }) {
   const size = vertical
     ? Math.min(scene.size, step / 1.15)
     : Math.min(scene.size, scene.width / Math.max(1, chars.length));
+  const detailSize = Math.max(16, Math.min(30, 260 / Math.max(1, chars.length)));
   const family =
     (value.font === "Modern" ? "Arial" : "Georgia") +
     "," +
@@ -193,6 +194,16 @@ export function EmbroideryPreview({ value }: { value: Embroidery }) {
           <use href={"#" + id("letters")} fill={"url(#" + id("thread-light") + ")"} />
         </g>
       </svg>
+      <div className="embroidery-detail" data-embroidery-zoom>
+        <span>{t("preview.zoomed")}</span>
+        <strong
+          className={japanese.className}
+          lang="ja"
+          style={{ color: embroideryColors[value.color], fontSize: detailSize }}
+        >
+          {text}
+        </strong>
+      </div>
       <div className="preview-placement">{placementText(value, locale)}</div>
       <figcaption>
         <strong>{t("preview.example")}</strong>

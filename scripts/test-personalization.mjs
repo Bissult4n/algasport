@@ -250,6 +250,11 @@ try {
           .getAttribute("data-embroidery-zone"),
         zone,
       );
+      assert.match(
+        await preview.locator("[data-embroidery-zone]").getAttribute("transform"),
+        new RegExp(`rotate\\(${({ Куртка: 14, Штаны: 8, Пояс: -30 })[zone]}\\)`),
+        `${zone} embroidery follows the fabric angle`,
+      );
       for (const text of [
         "柔道",
         "勝",
@@ -268,6 +273,14 @@ try {
         );
         if (text === "Алға" || text === "ALGA") assert.equal(japaneseText, "前進");
         if (text === "柔道") assert.equal(japaneseText, "柔道");
+        assert.equal(
+          await preview.locator("[data-embroidery-zoom] strong").textContent(),
+          japaneseText,
+        );
+        assert.ok(
+          parseFloat(await preview.locator("[data-embroidery-zoom] strong").evaluate((element) => getComputedStyle(element).fontSize)) >= 14,
+          "Enlarged inscription stays readable for long text",
+        );
         for (const font of ["Modern", "Serif", "Brush"]) {
           await modal.getByLabel("Шрифт", { exact: true }).selectOption(font);
           for (const orientation of ["horizontal", "vertical"]) {
@@ -285,6 +298,12 @@ try {
             );
           }
         }
+      }
+      if (zone === "Куртка") {
+        await modal.getByLabel("Исходный текст").fill("Бекмагамбет Сериков");
+        await preview.screenshot({
+          path: `${artifacts}/embroidery-long-${width}.png`,
+        });
       }
       await modal.getByLabel("Исходный текст").fill("柔道");
       await modal.getByLabel("Шрифт", { exact: true }).selectOption("Modern");

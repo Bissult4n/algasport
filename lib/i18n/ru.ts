@@ -219,6 +219,7 @@ export const ru = {
   "preview.namedEmbroidery": "ИМЕННАЯ ВЫШИВКА",
   "preview.live": "ПРЕДПРОСМОТР",
   "preview.embroideryAria": "Макет вышивки: {text}. {placement}",
+  "preview.zoomed": "Надпись крупным планом",
   "preview.example": "Пример расположения вышивки",
   "preview.photoNote": "{photo}. Размер надписи и место согласуем для вашего изделия.",
   "preview.jacketPhoto": "Zone Kiwami, вид спереди",
