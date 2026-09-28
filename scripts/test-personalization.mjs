@@ -189,6 +189,27 @@ try {
       await preview.locator("textPath").first().textContent(),
       "N.MARATOVA",
     );
+    assert.equal(
+      await preview.locator("textPath").first().getAttribute("textLength"),
+      "84",
+      "Medium backpatch names must be fitted inside the blue strip",
+    );
+    await modal
+      .getByLabel("Фамилия спортсмена")
+      .fill("A.VERYLONGSURNAME-NAME");
+    assert.equal(
+      await preview.locator("textPath").first().getAttribute("textLength"),
+      "84",
+      "Long backpatch names must remain fitted",
+    );
+    assert.ok(
+      await preview.locator("[data-backpatch-name]").getAttribute("clip-path"),
+      "Backpatch name must be clipped to the blue strip as a final guard",
+    );
+    await preview.screenshot({
+      path: `${artifacts}/backpatch-long-${width}.png`,
+    });
+    await modal.getByLabel("Фамилия спортсмена").fill("N.MARATOVA");
     assert.match(
       await preview.locator("image").getAttribute("href"),
       /adidas-ii-back/,

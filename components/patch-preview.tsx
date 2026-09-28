@@ -22,6 +22,15 @@ function BackpatchPreview({ value }: { value: Backpatch }) {
   const url = (s: string) => "url(#" + id(s) + ")";
   const text = value.surname || t("preview.yourSurname");
   const chars = Array.from(text);
+  const nameFontSize = chars.length > 20 ? 9 : chars.length > 15 ? 10 : 12;
+  const estimatedNameWidth =
+    chars.reduce((width, char) => {
+      if (/\s/.test(char)) return width + 0.35;
+      if (/[.'\-I1І]/.test(char)) return width + 0.34;
+      if (/[MW@ЖШЩФЮЫ]/.test(char)) return width + 1.05;
+      return width + 0.72;
+    }, 0) * nameFontSize;
+  const shouldFitName = estimatedNameWidth > 84;
 
   return (
     <figure className="patch-preview backpatch-preview">
@@ -96,6 +105,9 @@ function BackpatchPreview({ value }: { value: Backpatch }) {
           </pattern>
           <path id={id("name")} d="M105 92 Q153 86 201 93" />
           <path id={id("country")} d="M107 125 Q154 119 201 126" />
+          <clipPath id={id("name-clip")}>
+            <path d="M103 77 Q151 70 204 79 L203 102 Q151 96 103 101Z" />
+          </clipPath>
           <path
             id={id("patch")}
             d="M99 72 Q152 65 208 74 L206 137 Q151 143 100 135 Z"
@@ -118,16 +130,18 @@ function BackpatchPreview({ value }: { value: Backpatch }) {
               fill="#193c78"
             />
             <text
+              data-backpatch-name
               fill="#f0eee8"
               fontFamily="Arial,sans-serif"
               fontWeight="800"
-              fontSize="12"
+              fontSize={nameFontSize}
+              clipPath={url("name-clip")}
             >
               <textPath
                 href={"#" + id("name")}
                 startOffset="50%"
                 textAnchor="middle"
-                textLength={chars.length > 12 ? 88 : undefined}
+                textLength={shouldFitName ? 84 : undefined}
                 lengthAdjust="spacingAndGlyphs"
               >
                 {text}

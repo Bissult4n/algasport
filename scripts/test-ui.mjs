@@ -383,6 +383,13 @@ try {
   const mobile = await mobileContext.newPage();
   mobile.on("pageerror", error => errors.push(error.message));
   await mobile.goto(url, { waitUntil: "networkidle" });
+  assert.equal(
+    await mobile.locator(".catalog-grid").first().evaluate(element =>
+      getComputedStyle(element).gridTemplateColumns.split(" ").length
+    ),
+    1,
+    "The catalog must use one readable column at 390px",
+  );
   for (let y = 0; y < await mobile.evaluate(() => document.body.scrollHeight); y += 600) {
     await mobile.evaluate(y => scrollTo({ top: y, behavior: "instant" }), y);
     await mobile.waitForTimeout(30);
