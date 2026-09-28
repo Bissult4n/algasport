@@ -5,6 +5,7 @@ import {
   categories,
   getProduct,
   productImages,
+  productPrice,
   products,
   type Category,
   type Product,
@@ -108,7 +109,7 @@ function ProductCard({
           </div>
         )}
         <div className="product-price">
-          <span>{priceText(product.price, locale)}</span>
+          <span>{priceText(productPrice(product, variant), locale)}</span>
           <small>{t("product.confirmInChat")}</small>
         </div>
         <div className="card-actions">

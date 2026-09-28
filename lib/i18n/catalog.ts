@@ -168,6 +168,7 @@ const variantLabels: Record<Locale, Record<string, string>> = {
     "Черная смородина": "Қара қарақат", "Citrus / апельсин-лимон": "Citrus / апельсин-лимон",
     "Апельсин": "Апельсин", "Апельсин-черная смородина": "Апельсин-қара қарақат",
     "Ширина": "Ені", "Цвет": "Түсі", "Черный": "Қара",
+    "Версия": "Нұсқа", "Лицензионный": "Лицензиялық", "Оригинал": "Түпнұсқа",
   },
   en: {
     "Цвет уточнить": "Color to be confirmed", "Белый": "White", "Синий": "Blue",
@@ -176,6 +177,7 @@ const variantLabels: Record<Locale, Record<string, string>> = {
     "Черная смородина": "Blackcurrant", "Citrus / апельсин-лимон": "Citrus / orange-lemon",
     "Апельсин": "Orange", "Апельсин-черная смородина": "Orange-blackcurrant",
     "Ширина": "Width", "Цвет": "Color", "Черный": "Black",
+    "Версия": "Version", "Лицензионный": "Licensed", "Оригинал": "Original",
   },
 };
 

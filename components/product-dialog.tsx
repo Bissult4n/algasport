@@ -1,6 +1,11 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { productHasSize, productImages, type Product } from "@/lib/catalog";
+import {
+  productHasSize,
+  productImages,
+  productPrice,
+  type Product,
+} from "@/lib/catalog";
 import {
   defaultCustomization,
   itemTotal,
@@ -165,7 +170,9 @@ export function ProductDialog({
             </p>
             {product.category === "vitamins" ? <FitLineOverview productId={product.id} /> : <p className="detail-description">{copy.description}</p>}
             <ProductFacts specs={copy.specs} />
-            <p className="detail-price">{priceText(product.price, locale)}</p>
+            <p className="detail-price">
+              {priceText(productPrice(product, item.variant), locale)}
+            </p>
             <p className="muted small-copy">
             {copy.availability || t("product.orderAvailability")}
             </p>

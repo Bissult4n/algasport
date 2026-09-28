@@ -296,6 +296,27 @@ try {
   await page.evaluate(key => localStorage.removeItem(key), cartKey);
   await page.reload({ waitUntil: "networkidle" });
 
+  for (const id of ["mizuno-white", "mizuno-blue"]) {
+    await page.goto(url + "#product/" + id, { waitUntil: "networkidle" });
+    assert.equal(await dialog.getByLabel("Версия").inputValue(), "Лицензионный");
+    assert.equal((await dialog.locator(".detail-price").textContent()).trim(), "75 000 ₸");
+    await dialog.getByLabel("Версия").selectOption("Оригинал");
+    assert.equal((await dialog.locator(".detail-price").textContent()).trim(), "175 000 ₸");
+  }
+  await page.goto(url + "#product/mizuno-white", { waitUntil: "networkidle" });
+  await dialog.getByRole("button", { name: "Добавить в корзину", exact: true }).click();
+  await page.goto(url + "#product/mizuno-white", { waitUntil: "networkidle" });
+  await dialog.getByLabel("Версия").selectOption("Оригинал");
+  await dialog.getByRole("button", { name: "Добавить в корзину", exact: true }).click();
+  const mizunoCart = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), cartKey);
+  assert.equal(mizunoCart.length, 2, "Different Mizuno versions use separate cart lines");
+  await page.locator(".cart-button").click();
+  const mizunoCartText = await dialog.textContent();
+  for (const value of ["Версия: Лицензионный", "Версия: Оригинал", "250 000 ₸"])
+    assert.ok(mizunoCartText.includes(value), value);
+  await page.evaluate(key => localStorage.removeItem(key), cartKey);
+  await page.reload({ waitUntil: "networkidle" });
+
   await page.goto(url + "#product/mizuno-black-belt", { waitUntil: "networkidle" });
   await dialog.getByLabel("Желаемый размер").fill("4");
   assert.equal((await dialog.locator(".detail-price").textContent()).trim(), "25 000 ₸");
@@ -412,7 +433,10 @@ try {
   await mobile.goto(url + "#product/mizuno-white", { waitUntil: "networkidle" });
   const mizunoModal = mobile.locator("dialog");
   assert.equal(await mizunoModal.getAttribute("aria-label"), "Mizuno — белое кимоно");
-  assert.equal(await mizunoModal.getByLabel("Цвет / вариант").inputValue(), "Белый");
+  assert.equal(await mizunoModal.getByLabel("Версия").inputValue(), "Лицензионный");
+  assert.equal((await mizunoModal.locator(".detail-price").textContent()).trim(), "75 000 ₸");
+  await mizunoModal.getByLabel("Версия").selectOption("Оригинал");
+  assert.equal((await mizunoModal.locator(".detail-price").textContent()).trim(), "175 000 ₸");
   await mizunoModal.locator(".gallery-main img").evaluate(image => image.decode());
   assert.ok(await mizunoModal.evaluate(element => element.scrollWidth <= element.clientWidth));
   await mizunoModal.locator(".detail-gallery").scrollIntoViewIfNeeded();

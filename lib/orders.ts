@@ -1,4 +1,4 @@
-import { getProduct, productHasSize, type Price } from "./catalog";
+import { getProduct, productHasSize, productPrice, type Price } from "./catalog";
 import {
   CUSTOMIZATION_PRICES,
   WHATSAPP_NUMBER,
@@ -56,16 +56,18 @@ export const priceText = (value: Price, locale: Locale = "ru") => {
 
 export function itemTotal(item: CartItem): Price {
   const product = getProduct(item.productId);
-  if (!product || product.price === null) return null;
+  if (!product) return null;
+  const basePrice = productPrice(product, item.variant);
+  if (basePrice === null) return null;
   const extra = item.customization.enabled
     ? CUSTOMIZATION_PRICES[item.customization.type]
     : 0;
   if (extra === null) return null;
-  if (typeof product.price === "number")
-    return (product.price + extra) * item.quantity;
+  if (typeof basePrice === "number")
+    return (basePrice + extra) * item.quantity;
   return {
-    min: (product.price.min + extra) * item.quantity,
-    max: (product.price.max + extra) * item.quantity,
+    min: (basePrice.min + extra) * item.quantity,
+    max: (basePrice.max + extra) * item.quantity,
   };
 }
 export function cartTotal(items: CartItem[]): Price {
@@ -102,7 +104,8 @@ export function buildOrderMessage(items: CartItem[], locale: Locale = "ru"): str
         (variantLabel || translate(locale, "orderMessage.variant")) + ": " +
           localizedVariant(item.variant, locale),
         translate(locale, "orderMessage.quantity") + ": " + item.quantity,
-        translate(locale, "orderMessage.price") + ": " + priceText(p.price, locale),
+        translate(locale, "orderMessage.price") + ": " +
+          priceText(productPrice(rawProduct, item.variant), locale),
         ...(c.enabled
           ? [
               translate(locale, "orderMessage.customization") + ": " + translate(locale, "common.yes"),

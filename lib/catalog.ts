@@ -17,6 +17,7 @@ export type Product = {
   description: string;
   detail: string;
   price: Price;
+  variantPrices?: Record<string, Price>;
   images: string[];
   variants: string[];
   variantLabel?: string;
@@ -237,8 +238,11 @@ export const products: Product[] = [
       "Белое кимоно Mizuno для дзюдо. Принадлежность к модели Yusho Japan и IJF-статус требуют подтверждения.",
     detail:
       "Точное название модели, IJF-статус, размерная сетка и наличие требуют подтверждения. Укажите рост и вес — поможем подобрать размер после уточнения данных.",
+    price: 75000,
     images: ["/images/products/mizuno/mizuno-white.png"],
-    variants: ["Белый"],
+    variants: ["Лицензионный", "Оригинал"],
+    variantLabel: "Версия",
+    variantPrices: { Лицензионный: 75000, Оригинал: 175000 },
     availability: "Наличие уточняется при заказе.",
     specs: [
       { key: "model", value: "Модель уточняется" },
@@ -255,8 +259,11 @@ export const products: Product[] = [
       "Синее кимоно Mizuno для дзюдо. Принадлежность к модели Yusho или Yusho Best и IJF-статус требуют подтверждения.",
     detail:
       "Точное название модели, IJF-статус, размерная сетка и наличие требуют подтверждения. Укажите рост и вес — поможем подобрать размер после уточнения данных.",
+    price: 75000,
     images: ["/images/products/mizuno/mizuno-blue.png"],
-    variants: ["Синий"],
+    variants: ["Лицензионный", "Оригинал"],
+    variantLabel: "Версия",
+    variantPrices: { Лицензионный: 75000, Оригинал: 175000 },
     availability: "Наличие уточняется при заказе.",
     specs: [
       { key: "model", value: "Модель уточняется" },
@@ -368,6 +375,15 @@ export const products: Product[] = [
 export const getProduct = (id: string) => products.find((p) => p.id === id);
 export const productImages = (product: Product, variant?: string) =>
   (variant && product.variantImages?.[variant]) || product.images;
+export const productPrice = (product: Product, variant?: string): Price => {
+  if (
+    variant &&
+    product.variantPrices &&
+    Object.prototype.hasOwnProperty.call(product.variantPrices, variant)
+  )
+    return product.variantPrices[variant];
+  return product.price;
+};
 export const categoryName = (id: Category) =>
   categories.find((c) => c.id === id)!.name;
 export const productHasSize = (product: Product) =>
