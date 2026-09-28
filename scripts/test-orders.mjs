@@ -173,30 +173,38 @@ try {
     "Размер: 175",
   ])
     assert.ok(championMessage.includes(value), value);
-  const mizunoWhite = {
-    ...o.newItem("mizuno-white"),
-    key: "mizuno-white",
+  const legacyMizunoWhite = {
+    ...o.newItem("mizuno-judogi"),
+    key: "legacy-mizuno-white",
+    productId: "mizuno-white",
+    variant: "Лицензионный",
     size: "Уточнить",
   };
-  const mizunoBlue = {
-    ...o.newItem("mizuno-blue"),
-    key: "mizuno-blue",
+  const legacyMizunoBlue = {
+    ...o.newItem("mizuno-judogi"),
+    key: "legacy-mizuno-blue",
+    productId: "mizuno-blue",
+    variant: "Оригинал",
     size: "Уточнить",
   };
-  const mizunoItems = o.parseCart(JSON.stringify([mizunoWhite, mizunoBlue]));
-  assert.equal(mizunoItems.length, 2, "Mizuno colors remain separate products");
+  const mizunoItems = o.parseCart(
+    JSON.stringify([legacyMizunoWhite, legacyMizunoBlue]),
+  );
+  assert.equal(mizunoItems.length, 2, "Legacy Mizuno cart lines are preserved");
   assert.deepEqual(
     mizunoItems.map((entry) => [entry.productId, entry.variant]),
     [
-      ["mizuno-white", "Лицензионный"],
-      ["mizuno-blue", "Лицензионный"],
+      ["mizuno-judogi", "white-licensed"],
+      ["mizuno-judogi", "blue-original"],
     ],
   );
   const mizunoMessage = o.buildOrderMessage(mizunoItems);
   for (const value of [
-    "Mizuno — белое кимоно",
-    "Mizuno — синее кимоно",
+    "Mizuno — кимоно",
+    "Цвет: Белый",
     "Версия: Лицензионный",
+    "Цвет: Синий",
+    "Версия: Оригинал",
   ])
     assert.ok(mizunoMessage.includes(value), value);
   const bandWide = {
@@ -233,28 +241,27 @@ try {
     "Ширина: 3 см × 200 см",
   ])
     assert.ok(bandMessage.includes(value), value);
-  for (const id of ["mizuno-white", "mizuno-blue"]) {
-    const licensed = { ...o.newItem(id), key: id + "-licensed" };
-    const original = { ...o.newItem(id, "Оригинал"), key: id + "-original" };
-    assert.equal(licensed.variant, "Лицензионный");
-    assert.equal(original.variant, "Оригинал");
-    assert.equal(o.itemTotal(licensed), 75000);
-    assert.equal(o.itemTotal(original), 175000);
-    assert.deepEqual(
-      o.parseCart(JSON.stringify([licensed, original])),
-      [licensed, original],
-    );
-    const mizunoMessage = o.buildOrderMessage([licensed, original]);
-    for (const value of [
-      "Версия: Лицензионный",
-      "Цена: 75\u00a0000 ₸",
-      "Версия: Оригинал",
-      "Цена: 175\u00a0000 ₸",
-      "Итого: 250\u00a0000 ₸",
-    ]) assert.ok(mizunoMessage.includes(value), `${id}: ${value}`);
-    assert.ok(o.buildOrderMessage([original], "kk").includes("Нұсқа: Түпнұсқа"));
-    assert.ok(o.buildOrderMessage([licensed], "en").includes("Version: Licensed"));
+  const mizunoVariants = [
+    ["white-licensed", 75000],
+    ["white-original", 175000],
+    ["blue-licensed", 75000],
+    ["blue-original", 175000],
+  ];
+  for (const [variant, price] of mizunoVariants) {
+    const selected = {
+      ...o.newItem("mizuno-judogi", variant),
+      key: "mizuno-" + variant,
+    };
+    assert.equal(selected.variant, variant);
+    assert.equal(o.itemTotal(selected), price);
+    assert.deepEqual(o.parseCart(JSON.stringify([selected])), [selected]);
   }
+  assert.ok(o.buildOrderMessage([
+    { ...o.newItem("mizuno-judogi", "blue-original"), key: "mizuno-kk" },
+  ], "kk").includes("Нұсқа: Түпнұсқа"));
+  assert.ok(o.buildOrderMessage([
+    { ...o.newItem("mizuno-judogi", "white-licensed"), key: "mizuno-en" },
+  ], "en").includes("Version: Licensed"));
   const mizunoBelt = {
     ...o.newItem("mizuno-black-belt"),
     key: "mizuno-belt",

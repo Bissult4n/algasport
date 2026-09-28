@@ -4,6 +4,9 @@ import {
   productHasSize,
   productImages,
   productPrice,
+  productVariantGroups,
+  productVariantSelections,
+  productVariantWithOption,
   type Product,
 } from "@/lib/catalog";
 import {
@@ -74,6 +77,12 @@ export function ProductDialog({
       ? { ...backpatch, enabled }
       : { ...embroidery, enabled };
   const images = productImages(product, item.variant);
+  const variantGroups = productVariantGroups(product);
+  const currentVariantSelections = Object.fromEntries(
+    productVariantSelections(product, item.variant)
+      .filter(({ label }) => label)
+      .map(({ label, value }) => [label!, value]),
+  );
   const variantFieldLabel =
     localizedVariantLabel(product.variantLabel, locale) ||
     (product.category === "vitamins"
@@ -196,7 +205,50 @@ export function ProductDialog({
                   </small>
                 </label>
               )}
-              {product.variantSwatches ? (
+              {variantGroups.length ? (
+                variantGroups.map(({ label, values }) => {
+                  const localizedLabel = localizedVariantLabel(label, locale) || label;
+                  const swatches = product.variantOptionSwatches?.[label];
+                  return (
+                    <fieldset className="input-label variant-fieldset" key={label}>
+                      <legend>{localizedLabel}</legend>
+                      <div className="variant-picker">
+                        {values.map((value) => (
+                          <button
+                            type="button"
+                            key={value}
+                            className={currentVariantSelections[label] === value ? "active" : ""}
+                            aria-label={`${localizedLabel}: ${localizedVariant(value, locale)}`}
+                            aria-pressed={currentVariantSelections[label] === value}
+                            onClick={() => {
+                              setItem({
+                                ...item,
+                                variant: productVariantWithOption(
+                                  product,
+                                  item.variant,
+                                  label,
+                                  value,
+                                ),
+                              });
+                              setPhoto(0);
+                              setZoom(false);
+                            }}
+                          >
+                            {swatches?.[value] && (
+                              <span
+                                className="color-swatch"
+                                style={{ background: swatches[value] }}
+                                aria-hidden="true"
+                              />
+                            )}
+                            {localizedVariant(value, locale)}
+                          </button>
+                        ))}
+                      </div>
+                    </fieldset>
+                  );
+                })
+              ) : product.variantSwatches ? (
                 <fieldset className="input-label variant-fieldset">
                   <legend>{variantFieldLabel}</legend>
                   <div className="variant-picker">

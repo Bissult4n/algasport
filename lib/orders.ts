@@ -1,4 +1,11 @@
-import { getProduct, productHasSize, productPrice, type Price } from "./catalog";
+import {
+  getProduct,
+  normalizeProductVariant,
+  productHasSize,
+  productPrice,
+  productVariantSelections,
+  type Price,
+} from "./catalog";
 import {
   CUSTOMIZATION_PRICES,
   WHATSAPP_NUMBER,
@@ -35,10 +42,7 @@ export function newItem(productId: string, variant?: string): CartItem {
     key: "",
     productId,
     size: "",
-    variant:
-      variant && product.variants.includes(variant)
-        ? variant
-        : product.variants[0],
+    variant: normalizeProductVariant(productId, variant) || product.variants[0],
     quantity: 1,
     customization: defaultCustomization(),
   };
@@ -89,7 +93,7 @@ export function buildOrderMessage(items: CartItem[], locale: Locale = "ru"): str
       if (!rawProduct) return "";
       const p = localizedProduct(rawProduct, locale);
       const c = item.customization;
-      const variantLabel = localizedVariantLabel(rawProduct.variantLabel, locale);
+      const variantSelections = productVariantSelections(rawProduct, item.variant);
       return [
         items.length > 1 ? String(index + 1) + "." : "",
         translate(locale, "orderMessage.product") + ": " + p.name,
@@ -101,8 +105,11 @@ export function buildOrderMessage(items: CartItem[], locale: Locale = "ru"): str
                 ? "orderMessage.sizeOrder"
                 : "orderMessage.sizeHelp"))
           : "",
-        (variantLabel || translate(locale, "orderMessage.variant")) + ": " +
-          localizedVariant(item.variant, locale),
+        ...variantSelections.map(({ label, value }) =>
+          (localizedVariantLabel(label, locale) ||
+            translate(locale, "orderMessage.variant")) + ": " +
+          localizedVariant(value, locale),
+        ),
         translate(locale, "orderMessage.quantity") + ": " + item.quantity,
         translate(locale, "orderMessage.price") + ": " +
           priceText(productPrice(rawProduct, item.variant), locale),
@@ -179,12 +186,11 @@ export function parseCart(raw: string | null): CartItem[] {
       const c = parseCustomization(x.customization);
       if (!c || (c.enabled && p.category !== "kimono")) return [];
       const variant =
-        typeof x.variant === "string" && p.variants.includes(x.variant)
-          ? x.variant
-          : p.category === "kimono" &&
-              ["Уточнить цвет", "Белый", "Синий"].includes(x.variant)
-            ? p.variants[0]
-            : null;
+        normalizeProductVariant(x.productId, x.variant) ||
+        (p.category === "kimono" &&
+        ["Уточнить цвет", "Белый", "Синий"].includes(x.variant)
+          ? p.variants[0]
+          : null);
       if (
         typeof x.size !== "string" ||
         x.size.length > 40 ||

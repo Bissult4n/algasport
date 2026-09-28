@@ -6,6 +6,9 @@ import {
   getProduct,
   productImages,
   productPrice,
+  productVariantGroups,
+  productVariantSelections,
+  productVariantWithOption,
   products,
   type Category,
   type Product,
@@ -54,6 +57,17 @@ function ProductCard({
   const [variant, setVariant] = useState(product.variants[0]);
   const images = productImages(product, variant);
   const copy = localizedProduct(product, locale);
+  const colorGroup = productVariantGroups(product).find(
+    ({ label }) => label === "Цвет",
+  );
+  const currentColor = productVariantSelections(product, variant).find(
+    ({ label }) => label === "Цвет",
+  )?.value;
+  const cardColors = colorGroup?.values ||
+    (product.variantSwatches ? product.variants : []);
+  const cardSwatches = colorGroup
+    ? product.variantOptionSwatches?.Цвет
+    : product.variantSwatches;
   return (
     <article className="catalog-card">
       <button
@@ -62,7 +76,12 @@ function ProductCard({
         onClick={() => onOpen(variant)}
         aria-label={t("product.open", { name: copy.name })}
       >
-        <Photo src={images[0]} alt={copy.name + ", " + localizedVariant(variant, locale)} />
+        <Photo
+          src={images[0]}
+          alt={copy.name + ", " + productVariantSelections(product, variant)
+            .map(({ value }) => localizedVariant(value, locale))
+            .join(", ")}
+        />
         {copy.badge && (
           <span className="product-badge">{copy.badge}</span>
         )}
@@ -87,20 +106,24 @@ function ProductCard({
             ? t("common.kimonoAvailability")
             : t("common.availability"))}
         </p>
-        {product.variantSwatches && product.variants.length > 1 && (
+        {!!cardSwatches && cardColors.length > 1 && (
           <div className="card-color-picker" aria-label={t("product.colorChoice")}>
-            {product.variants.map((name) => (
+            {cardColors.map((name) => (
               <button
                 type="button"
                 key={name}
-                className={name === variant ? "active" : ""}
+                className={(colorGroup ? name === currentColor : name === variant) ? "active" : ""}
                 aria-label={t("product.color", { value: localizedVariant(name, locale) })}
-                aria-pressed={name === variant}
-                onClick={() => setVariant(name)}
+                aria-pressed={colorGroup ? name === currentColor : name === variant}
+                onClick={() => setVariant(
+                  colorGroup
+                    ? productVariantWithOption(product, variant, colorGroup.label, name)
+                    : name,
+                )}
               >
                 <span
                   className="color-swatch"
-                  style={{ background: product.variantSwatches?.[name] }}
+                  style={{ background: cardSwatches[name] }}
                   aria-hidden="true"
                 />
                 {localizedVariant(name, locale)}
@@ -147,8 +170,13 @@ export function Storefront() {
     };
     const hash = () => {
       const id = window.location.hash.slice(9);
-      if (window.location.hash.startsWith("#product/") && getProduct(id))
-        setView({ type: "product", id });
+      const product = getProduct(id);
+      if (window.location.hash.startsWith("#product/") && product)
+        setView({
+          type: "product",
+          id: product.id,
+          initial: id === product.id ? undefined : newItem(id),
+        });
       else setView(current => current?.type === "product" ? null : current);
     };
     hash();

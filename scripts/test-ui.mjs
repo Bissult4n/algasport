@@ -96,36 +96,36 @@ try {
   const page = await context.newPage();
   await page.goto(url, { waitUntil: "networkidle" });
   const dialog = page.locator("dialog");
-  assert.equal(await page.locator("#catalog .catalog-card").count(), 16);
+  assert.equal(await page.locator("#catalog .catalog-card").count(), 15);
   assert.equal(await page.locator(".owner-photo-placeholder").count(), 2);
   await mkdir(artifacts, { recursive: true });
   await page.screenshot({ path: artifacts + "/desktop.png" });
 
-  for (const [name, count] of [["Кимоно", 9], ["Витамины", 4], ["Снаряжение", 3], ["Все товары", 16]]) {
+  for (const [name, count] of [["Кимоно", 8], ["Витамины", 4], ["Снаряжение", 3], ["Все товары", 15]]) {
     await page.getByRole("button", { name: new RegExp("^" + name + "\\s*" + count + "$" ) }).click();
     assert.equal(await page.locator("#catalog .catalog-card").count(), count);
   }
   await page.getByRole("searchbox").fill("kiwami");
   assert.equal(await page.locator("#catalog .catalog-card").count(), 1);
   await page.getByRole("searchbox").fill("Mizuno");
-  assert.equal(await page.locator("#catalog .catalog-card").count(), 3);
+  assert.equal(await page.locator("#catalog .catalog-card").count(), 2);
   await page.getByRole("searchbox").fill("Sakura Black Belt");
   assert.equal(await page.locator("#catalog .catalog-card").count(), 1);
   await page.getByRole("searchbox").fill("Yusho");
-  assert.equal(await page.locator("#catalog .catalog-card").count(), 2);
+  assert.equal(await page.locator("#catalog .catalog-card").count(), 1);
   await page.getByRole("searchbox").fill("Yusho Best");
   assert.equal(await page.locator("#catalog .catalog-card").count(), 1);
   await page.getByRole("searchbox").fill("unknown-product");
   assert.equal(await page.locator(".no-results").count(), 1);
   await page.getByRole("button", { name: "Показать все товары" }).click();
   const cards = page.locator("#catalog .catalog-card");
-  for (let i = 0; i < 16; i++) {
+  for (let i = 0; i < 15; i++) {
     const card = cards.nth(i);
     const name = await card.locator("h3").textContent();
-    if (i < 9) assert.equal(await card.locator(".product-facts.compact").count(), 1, name + ": compact facts");
+    if (i < 8) assert.equal(await card.locator(".product-facts.compact").count(), 1, name + ": compact facts");
     await card.getByRole("button", { name: "Оформить", exact: true }).click();
     assert.equal(await dialog.getAttribute("aria-label"), name);
-    if (i < 9) assert.equal(await dialog.locator(".product-facts:not(.compact)").count(), 1, name + ": dialog facts");
+    if (i < 8) assert.equal(await dialog.locator(".product-facts:not(.compact)").count(), 1, name + ": dialog facts");
     const mainPhoto = dialog.locator(".gallery-main img");
     if (name.startsWith("Zone ")) {
       const white = await mainPhoto.getAttribute("src");
@@ -296,26 +296,30 @@ try {
   await page.evaluate(key => localStorage.removeItem(key), cartKey);
   await page.reload({ waitUntil: "networkidle" });
 
-  for (const id of ["mizuno-white", "mizuno-blue"]) {
-    await page.goto(url + "#product/" + id, { waitUntil: "networkidle" });
-    assert.equal(await dialog.getByLabel("Версия").inputValue(), "Лицензионный");
-    assert.equal((await dialog.locator(".detail-price").textContent()).trim(), "75 000 ₸");
-    await dialog.getByLabel("Версия").selectOption("Оригинал");
-    assert.equal((await dialog.locator(".detail-price").textContent()).trim(), "175 000 ₸");
-  }
-  await page.goto(url + "#product/mizuno-white", { waitUntil: "networkidle" });
+  await page.goto(url + "#product/mizuno-judogi", { waitUntil: "networkidle" });
+  const mizunoMainPhoto = dialog.locator(".gallery-main img");
+  assert.ok((await mizunoMainPhoto.getAttribute("src")).includes("mizuno-white.png"));
+  assert.equal((await dialog.locator(".detail-price").textContent()).trim(), "75 000 ₸");
   await dialog.getByRole("button", { name: "Добавить в корзину", exact: true }).click();
-  await page.goto(url + "#product/mizuno-white", { waitUntil: "networkidle" });
-  await dialog.getByLabel("Версия").selectOption("Оригинал");
+  await page.goto(url + "#product/mizuno-judogi", { waitUntil: "networkidle" });
+  await dialog.getByRole("button", { name: "Цвет: Синий", exact: true }).click();
+  assert.ok((await mizunoMainPhoto.getAttribute("src")).includes("mizuno-blue.png"));
+  await dialog.getByRole("button", { name: "Версия: Оригинал", exact: true }).click();
+  assert.equal((await dialog.locator(".detail-price").textContent()).trim(), "175 000 ₸");
   await dialog.getByRole("button", { name: "Добавить в корзину", exact: true }).click();
   const mizunoCart = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), cartKey);
-  assert.equal(mizunoCart.length, 2, "Different Mizuno versions use separate cart lines");
+  assert.equal(mizunoCart.length, 2, "Different Mizuno color/version combinations use separate cart lines");
+  assert.ok(mizunoCart.every(item => item.productId === "mizuno-judogi"));
   await page.locator(".cart-button").click();
   const mizunoCartText = await dialog.textContent();
-  for (const value of ["Версия: Лицензионный", "Версия: Оригинал", "250 000 ₸"])
+  for (const value of ["Цвет: Белый", "Версия: Лицензионный", "Цвет: Синий", "Версия: Оригинал", "250 000 ₸"])
     assert.ok(mizunoCartText.includes(value), value);
   await page.evaluate(key => localStorage.removeItem(key), cartKey);
   await page.reload({ waitUntil: "networkidle" });
+  await page.goto(url + "#product/mizuno-blue", { waitUntil: "networkidle" });
+  assert.equal(await dialog.getAttribute("aria-label"), "Mizuno — кимоно");
+  assert.ok((await dialog.locator(".gallery-main img").getAttribute("src")).includes("mizuno-blue.png"));
+  await page.keyboard.press("Escape");
 
   await page.goto(url + "#product/mizuno-black-belt", { waitUntil: "networkidle" });
   await dialog.getByLabel("Желаемый размер").fill("4");
@@ -430,12 +434,13 @@ try {
   }
   await bandModal.locator(".detail-gallery").scrollIntoViewIfNeeded();
   await mobile.screenshot({ path: artifacts + "/korean-band-mobile.png" });
-  await mobile.goto(url + "#product/mizuno-white", { waitUntil: "networkidle" });
+  await mobile.goto(url + "#product/mizuno-judogi", { waitUntil: "networkidle" });
   const mizunoModal = mobile.locator("dialog");
-  assert.equal(await mizunoModal.getAttribute("aria-label"), "Mizuno — белое кимоно");
-  assert.equal(await mizunoModal.getByLabel("Версия").inputValue(), "Лицензионный");
+  assert.equal(await mizunoModal.getAttribute("aria-label"), "Mizuno — кимоно");
   assert.equal((await mizunoModal.locator(".detail-price").textContent()).trim(), "75 000 ₸");
-  await mizunoModal.getByLabel("Версия").selectOption("Оригинал");
+  await mizunoModal.getByRole("button", { name: "Цвет: Синий", exact: true }).click();
+  assert.ok((await mizunoModal.locator(".gallery-main img").getAttribute("src")).includes("mizuno-blue.png"));
+  await mizunoModal.getByRole("button", { name: "Версия: Оригинал", exact: true }).click();
   assert.equal((await mizunoModal.locator(".detail-price").textContent()).trim(), "175 000 ₸");
   await mizunoModal.locator(".gallery-main img").evaluate(image => image.decode());
   assert.ok(await mizunoModal.evaluate(element => element.scrollWidth <= element.clientWidth));
@@ -514,7 +519,7 @@ try {
   assert.deepEqual(errors, []);
   assert.deepEqual(failures, []);
   assert.ok(requests.every(request => request.startsWith(url) || request.startsWith("https://wa.me/") || request.startsWith("https://www.instagram.com/")), "Unexpected external runtime dependency");
-  console.log("PASS: all 16 products and galleries; judogi facts; fixed and range prices; black belts; RU/KZ/EN switching and localized orders; locale and cart persistence; all 4 FitLine overviews, nutrition tables, accordions and mobile orders; filters/search including localized copy, Mizuno and Yusho; cart add/edit/remove/limits/persistence; cross-tab and blocked storage; Unicode/customization; order/copy; intercepted WhatsApp/Instagram links; anchors; FAQ; mobile 320-768; no console errors or broken assets.");
+  console.log("PASS: all 15 products and galleries; merged Mizuno color/version variants; judogi facts; fixed and range prices; black belts; RU/KZ/EN switching and localized orders; locale and cart persistence; all 4 FitLine overviews, nutrition tables, accordions and mobile orders; filters/search including localized copy, Mizuno and Yusho; cart add/edit/remove/limits/persistence; cross-tab and blocked storage; Unicode/customization; order/copy; intercepted WhatsApp/Instagram links; anchors; FAQ; mobile 320-768; no console errors or broken assets.");
 } finally {
   await browser?.close();
   if (server.exitCode === null) {

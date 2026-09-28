@@ -1,5 +1,10 @@
 "use client";
-import { getProduct, productHasSize, productImages } from "@/lib/catalog";
+import {
+  getProduct,
+  productHasSize,
+  productImages,
+  productVariantSelections,
+} from "@/lib/catalog";
 import {
   buildOrderMessage,
   cartTotal,
@@ -53,12 +58,18 @@ export function CartDialog({
           items.map((item) => {
             const rawProduct = getProduct(item.productId)!;
             const p = localizedProduct(rawProduct, locale);
+            const variantSelections = productVariantSelections(
+              rawProduct,
+              item.variant,
+            );
             return (
               <article className="cart-line" key={item.key}>
                 <div className="cart-photo">
                   <Photo
                     src={productImages(rawProduct, item.variant)[0]}
-                    alt={p.name + ", " + localizedVariant(item.variant, locale)}
+                    alt={p.name + ", " + variantSelections
+                      .map(({ value }) => localizedVariant(value, locale))
+                      .join(", ")}
                   />
                 </div>
                 <div className="cart-line-detail">
@@ -74,11 +85,16 @@ export function CartDialog({
                         <br />
                       </>
                     )}
-                    {rawProduct.variantLabel
-                      ? `${localizedVariantLabel(rawProduct.variantLabel, locale)}: ${localizedVariant(item.variant, locale)}`
-                      : rawProduct.variantSwatches
-                        ? `${t("product.kimonoColor")}: ${localizedVariant(item.variant, locale)}`
-                        : localizedVariant(item.variant, locale)}
+                    {variantSelections.map(({ label, value }, index) => (
+                      <span key={(label || "variant") + value}>
+                        {label
+                          ? `${localizedVariantLabel(label, locale)}: ${localizedVariant(value, locale)}`
+                          : rawProduct.variantSwatches
+                            ? `${t("product.kimonoColor")}: ${localizedVariant(value, locale)}`
+                            : localizedVariant(value, locale)}
+                        {index < variantSelections.length - 1 && <br />}
+                      </span>
+                    ))}
                   </p>
                   {item.customization.enabled && (
                     <p className="personalization-summary">

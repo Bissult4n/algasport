@@ -9,6 +9,7 @@ export type ProductSpecKey =
   | "feature"
   | "model";
 export type ProductSpec = { key: ProductSpecKey; value: string };
+export type ProductVariantSelection = { label?: string; value: string };
 export type Product = {
   id: string;
   name: string;
@@ -23,6 +24,8 @@ export type Product = {
   variantLabel?: string;
   variantImages?: Record<string, string[]>;
   variantSwatches?: Record<string, string>;
+  variantAttributes?: Record<string, Record<string, string>>;
+  variantOptionSwatches?: Record<string, Record<string, string>>;
   availability?: string;
   badge?: string;
   featured?: boolean;
@@ -231,39 +234,42 @@ export const products: Product[] = [
   },
   {
     ...kimono,
-    id: "mizuno-white",
-    name: "Mizuno — белое кимоно",
+    id: "mizuno-judogi",
+    name: "Mizuno — кимоно",
     brand: "Mizuno",
     description:
-      "Белое кимоно Mizuno для дзюдо. Принадлежность к модели Yusho Japan и IJF-статус требуют подтверждения.",
+      "Кимоно Mizuno для дзюдо в белом и синем цветах. Точная модель и IJF-статус требуют подтверждения.",
     detail:
-      "Точное название модели, IJF-статус, размерная сетка и наличие требуют подтверждения. Укажите рост и вес — поможем подобрать размер после уточнения данных.",
+      "Доступны белый и синий цвета, а также лицензионная и оригинальная версии. Принадлежность к линейке Yusho / Yusho Best, IJF-статус, размерная сетка и наличие требуют подтверждения.",
     price: 75000,
     images: ["/images/products/mizuno/mizuno-white.png"],
-    variants: ["Лицензионный", "Оригинал"],
-    variantLabel: "Версия",
-    variantPrices: { Лицензионный: 75000, Оригинал: 175000 },
-    availability: "Наличие уточняется при заказе.",
-    specs: [
-      { key: "model", value: "Модель уточняется" },
-      { key: "certification", value: "IJF-статус уточняется" },
-      { key: "purpose", value: "Дзюдо" },
+    variants: [
+      "white-licensed",
+      "white-original",
+      "blue-licensed",
+      "blue-original",
     ],
-  },
-  {
-    ...kimono,
-    id: "mizuno-blue",
-    name: "Mizuno — синее кимоно",
-    brand: "Mizuno",
-    description:
-      "Синее кимоно Mizuno для дзюдо. Принадлежность к модели Yusho или Yusho Best и IJF-статус требуют подтверждения.",
-    detail:
-      "Точное название модели, IJF-статус, размерная сетка и наличие требуют подтверждения. Укажите рост и вес — поможем подобрать размер после уточнения данных.",
-    price: 75000,
-    images: ["/images/products/mizuno/mizuno-blue.png"],
-    variants: ["Лицензионный", "Оригинал"],
-    variantLabel: "Версия",
-    variantPrices: { Лицензионный: 75000, Оригинал: 175000 },
+    variantAttributes: {
+      "white-licensed": { Цвет: "Белый", Версия: "Лицензионный" },
+      "white-original": { Цвет: "Белый", Версия: "Оригинал" },
+      "blue-licensed": { Цвет: "Синий", Версия: "Лицензионный" },
+      "blue-original": { Цвет: "Синий", Версия: "Оригинал" },
+    },
+    variantOptionSwatches: {
+      Цвет: { Белый: "#f1f0eb", Синий: "#15529b" },
+    },
+    variantImages: {
+      "white-licensed": ["/images/products/mizuno/mizuno-white.png"],
+      "white-original": ["/images/products/mizuno/mizuno-white.png"],
+      "blue-licensed": ["/images/products/mizuno/mizuno-blue.png"],
+      "blue-original": ["/images/products/mizuno/mizuno-blue.png"],
+    },
+    variantPrices: {
+      "white-licensed": 75000,
+      "white-original": 175000,
+      "blue-licensed": 75000,
+      "blue-original": 175000,
+    },
     availability: "Наличие уточняется при заказе.",
     specs: [
       { key: "model", value: "Модель уточняется" },
@@ -372,7 +378,12 @@ export const products: Product[] = [
       "Точное официальное название модели, ширина и IJF-статус не подтверждены. Размер и итоговую стоимость уточним при заказе.",
   },
 ];
-export const getProduct = (id: string) => products.find((p) => p.id === id);
+const productAliases: Record<string, string> = {
+  "mizuno-white": "mizuno-judogi",
+  "mizuno-blue": "mizuno-judogi",
+};
+export const getProduct = (id: string) =>
+  products.find((p) => p.id === (productAliases[id] || id));
 export const productImages = (product: Product, variant?: string) =>
   (variant && product.variantImages?.[variant]) || product.images;
 export const productPrice = (product: Product, variant?: string): Price => {
@@ -383,6 +394,67 @@ export const productPrice = (product: Product, variant?: string): Price => {
   )
     return product.variantPrices[variant];
   return product.price;
+};
+export const productVariantSelections = (
+  product: Product,
+  variant: string,
+): ProductVariantSelection[] => {
+  const attributes = product.variantAttributes?.[variant];
+  if (attributes)
+    return Object.entries(attributes).map(([label, value]) => ({ label, value }));
+  return [{ label: product.variantLabel, value: variant }];
+};
+export const productVariantGroups = (product: Product) => {
+  const groups = new Map<string, string[]>();
+  for (const variant of product.variants) {
+    for (const [label, value] of Object.entries(
+      product.variantAttributes?.[variant] || {},
+    )) {
+      const values = groups.get(label) || [];
+      if (!values.includes(value)) values.push(value);
+      groups.set(label, values);
+    }
+  }
+  return [...groups].map(([label, values]) => ({ label, values }));
+};
+export const productVariantWithOption = (
+  product: Product,
+  currentVariant: string,
+  label: string,
+  value: string,
+) => {
+  const current = product.variantAttributes?.[currentVariant];
+  if (!current) return currentVariant;
+  return product.variants.find((variant) => {
+    const candidate = product.variantAttributes?.[variant];
+    return candidate &&
+      candidate[label] === value &&
+      Object.entries(current).every(
+        ([key, currentValue]) => key === label || candidate[key] === currentValue,
+      );
+  }) || currentVariant;
+};
+export const normalizeProductVariant = (
+  productId: string,
+  variant: unknown,
+): string | null => {
+  const product = getProduct(productId);
+  if (!product) return null;
+  if (
+    product.id === "mizuno-judogi" &&
+    (productId === "mizuno-white" || productId === "mizuno-blue") &&
+    typeof variant !== "string"
+  )
+    return productId === "mizuno-blue" ? "blue-licensed" : "white-licensed";
+  if (typeof variant !== "string") return null;
+  if (product.variants.includes(variant)) return variant;
+  if (product.id === "mizuno-judogi") {
+    const color = productId === "mizuno-blue" ? "blue" : "white";
+    if (variant === "Лицензионный" || variant === "Белый" || variant === "Синий")
+      return `${color}-licensed`;
+    if (variant === "Оригинал") return `${color}-original`;
+  }
+  return null;
 };
 export const categoryName = (id: Category) =>
   categories.find((c) => c.id === id)!.name;

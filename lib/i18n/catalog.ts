@@ -17,8 +17,7 @@ const kk: Record<string, ProductCopy> = {
   "adidas-champion-iii-gold": { description: "Алтын жолақтары бар Champion III. Фотосуретте White / Gold ақ нұсқасы көрсетілген." },
   "adidas-champion-iii-red": { description: "Қызыл IJF белгісі бар Champion III. Red кимоно түсін емес, жапсырма түрін білдіреді." },
   "adidas-champion-ii": { description: "Күшейтілген тігістері бар классикалық Champion II. Дзюдоға арналған күрте мен шалбар." },
-  "mizuno-white": { name: "Mizuno — ақ кимоно", description: "Дзюдоға арналған ақ Mizuno кимоносы. Yusho Japan моделіне тиесілігі мен IJF мәртебесі растауды қажет етеді.", detail: "Нақты модель атауы, IJF мәртебесі, өлшем торы және бар-жоғы нақтылануы керек. Бойыңыз бен салмағыңызды жазыңыз — мәліметтер расталғаннан кейін өлшем таңдауға көмектесеміз.", availability: "Бар-жоғы тапсырыс кезінде нақтыланады." },
-  "mizuno-blue": { name: "Mizuno — көк кимоно", description: "Дзюдоға арналған көк Mizuno кимоносы. Yusho немесе Yusho Best моделіне тиесілігі мен IJF мәртебесі растауды қажет етеді.", detail: "Нақты модель атауы, IJF мәртебесі, өлшем торы және бар-жоғы нақтылануы керек. Бойыңыз бен салмағыңызды жазыңыз — мәліметтер расталғаннан кейін өлшем таңдауға көмектесеміз.", availability: "Бар-жоғы тапсырыс кезінде нақтыланады." },
+  "mizuno-judogi": { name: "Mizuno — кимоно", description: "Дзюдоға арналған ақ және көк түсті Mizuno кимоносы. Нақты моделі мен IJF мәртебесі растауды қажет етеді.", detail: "Ақ және көк түстері, сондай-ақ лицензиялық және түпнұсқа нұсқалары бар. Yusho / Yusho Best желісіне тиесілігі, IJF мәртебесі, өлшем торы және бар-жоғы нақтыланады.", availability: "Бар-жоғы тапсырыс кезінде нақтыланады." },
   "fitline-activize": { description: "Энергия алмасуы мен зейінді қолдауға арналған B және C дәрумендері мен кофеині бар сусын.", detail: "Құрамы мен қолданылуы FitLine Kazakhstan ресми ақпаратына негізделген." },
   "fitline-restorate": { description: "Бұлшықет пен жүйке жүйесіне арналған магний, сүйек пен тіске арналған кальций бар минералды сусын.", detail: "Құрамы мен қолданылуы FitLine Kazakhstan ресми ақпаратына негізделген." },
   "fitline-basics": { description: "Жасушаларды қорғауға және иммундық жүйені қолдауға арналған тағамдық талшықтар, C және E дәрумендері мен селен.", detail: "Құрамы мен қолданылуы FitLine Kazakhstan ресми ақпаратына негізделген." },
@@ -36,8 +35,7 @@ const en: Record<string, ProductCopy> = {
   "adidas-champion-iii-gold": { description: "Champion III with gold stripes. The photo shows the white White / Gold version." },
   "adidas-champion-iii-red": { description: "Champion III with a red IJF label. Red refers to the label, not the judogi color." },
   "adidas-champion-ii": { description: "Classic Champion II with reinforced seams. Judo jacket and trousers." },
-  "mizuno-white": { name: "Mizuno — white judogi", description: "White Mizuno judogi for judo. Its identification as Yusho Japan and its IJF status require confirmation.", detail: "The exact model name, IJF status, size chart and availability require confirmation. Share your height and weight and we will help select a size once the details are verified.", availability: "Availability is confirmed when ordering." },
-  "mizuno-blue": { name: "Mizuno — blue judogi", description: "Blue Mizuno judogi for judo. Its identification as Yusho or Yusho Best and its IJF status require confirmation.", detail: "The exact model name, IJF status, size chart and availability require confirmation. Share your height and weight and we will help select a size once the details are verified.", availability: "Availability is confirmed when ordering." },
+  "mizuno-judogi": { name: "Mizuno judogi", description: "Mizuno judogi for judo, available in white and blue. The exact model and IJF status require confirmation.", detail: "Available in white and blue, with licensed and original versions. Its identification as Yusho / Yusho Best, IJF status, size chart and availability require confirmation.", availability: "Availability is confirmed when ordering." },
   "fitline-activize": { description: "A drink with vitamins B and C plus caffeine to support energy metabolism and concentration.", detail: "Ingredients and directions follow official FitLine Kazakhstan information." },
   "fitline-restorate": { description: "A mineral drink with magnesium for muscles and the nervous system, and calcium for bones and teeth.", detail: "Ingredients and directions follow official FitLine Kazakhstan information." },
   "fitline-basics": { description: "Dietary fiber, vitamins C and E, and selenium for cell protection and normal immune function.", detail: "Ingredients and directions follow official FitLine Kazakhstan information." },
@@ -91,12 +89,7 @@ const kkSpecs: Record<string, ProductSpec[]> = {
     { key: "purpose", value: "Дзюдо" },
     { key: "feature", value: "Күрте мен шалбар, күшейтілген тігістер" },
   ],
-  "mizuno-white": [
-    { key: "model", value: "Модель нақтыланады" },
-    { key: "certification", value: "IJF мәртебесі нақтыланады" },
-    { key: "purpose", value: "Дзюдо" },
-  ],
-  "mizuno-blue": [
+  "mizuno-judogi": [
     { key: "model", value: "Модель нақтыланады" },
     { key: "certification", value: "IJF мәртебесі нақтыланады" },
     { key: "purpose", value: "Дзюдо" },
@@ -147,12 +140,7 @@ const enSpecs: Record<string, ProductSpec[]> = {
     { key: "purpose", value: "Judo" },
     { key: "feature", value: "Jacket and trousers with reinforced seams" },
   ],
-  "mizuno-white": [
-    { key: "model", value: "Model to be confirmed" },
-    { key: "certification", value: "IJF status to be confirmed" },
-    { key: "purpose", value: "Judo" },
-  ],
-  "mizuno-blue": [
+  "mizuno-judogi": [
     { key: "model", value: "Model to be confirmed" },
     { key: "certification", value: "IJF status to be confirmed" },
     { key: "purpose", value: "Judo" },
