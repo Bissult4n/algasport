@@ -7,6 +7,43 @@ import { backOutline } from "./kimono-photo";
 import { EmbroideryPreview } from "./embroidery-preview";
 import { useI18n } from "@/lib/i18n/context";
 
+function backpatchTextUnits(value: string) {
+  return Array.from(value).reduce((width, char) => {
+    if (/\s/.test(char)) return width + 0.35;
+    if (/[.'\-I1І]/.test(char)) return width + 0.34;
+    if (/[MW@ЖШЩФЮЫ]/.test(char)) return width + 1.05;
+    return width + 0.72;
+  }, 0);
+}
+
+function backpatchNameLines(value: string) {
+  const text = value.trim().replace(/\s+/g, " ");
+  if (backpatchTextUnits(text) <= 9.5) return [text];
+
+  const chars = Array.from(text);
+  const target = backpatchTextUnits(text) / 2;
+  let width = 0;
+  let splitAt = 1;
+  for (let index = 0; index < chars.length - 1; index += 1) {
+    width += backpatchTextUnits(chars[index]);
+    splitAt = index + 1;
+    if (width >= target) break;
+  }
+
+  const leftSpace = text.lastIndexOf(" ", splitAt);
+  const rightSpace = text.indexOf(" ", splitAt);
+  const candidates = [leftSpace, rightSpace].filter(
+    (index) => index > 0 && index < text.length - 1,
+  );
+  if (candidates.length) {
+    splitAt = candidates.reduce((best, index) =>
+      Math.abs(index - splitAt) < Math.abs(best - splitAt) ? index : best,
+    );
+  }
+
+  return [text.slice(0, splitAt).trim(), text.slice(splitAt).trim()];
+}
+
 export function PatchPreview({ value }: { value: Customization }) {
   return value.type === "embroidery" ? (
     <EmbroideryPreview value={value} />
@@ -21,16 +58,10 @@ function BackpatchPreview({ value }: { value: Backpatch }) {
   const id = (s: string) => uid + s;
   const url = (s: string) => "url(#" + id(s) + ")";
   const text = value.surname || t("preview.yourSurname");
-  const chars = Array.from(text);
-  const nameFontSize = chars.length > 20 ? 9 : chars.length > 15 ? 10 : 12;
-  const estimatedNameWidth =
-    chars.reduce((width, char) => {
-      if (/\s/.test(char)) return width + 0.35;
-      if (/[.'\-I1І]/.test(char)) return width + 0.34;
-      if (/[MW@ЖШЩФЮЫ]/.test(char)) return width + 1.05;
-      return width + 0.72;
-    }, 0) * nameFontSize;
-  const shouldFitName = estimatedNameWidth > 84;
+  const nameLines = backpatchNameLines(text);
+  const longestLine = Math.max(...nameLines.map(backpatchTextUnits), 1);
+  const nameFontSize = Math.min(nameLines.length === 1 ? 12 : 9.5, 76 / longestLine);
+  const lineYs = nameLines.length === 1 ? [94] : [87.5, 98];
 
   return (
     <figure className="patch-preview backpatch-preview">
@@ -103,11 +134,6 @@ function BackpatchPreview({ value }: { value: Backpatch }) {
               strokeWidth=".22"
             />
           </pattern>
-          <path id={id("name")} d="M105 92 Q153 86 201 93" />
-          <path id={id("country")} d="M107 125 Q154 119 201 126" />
-          <clipPath id={id("name-clip")}>
-            <path d="M103 77 Q151 70 204 79 L203 102 Q151 96 103 101Z" />
-          </clipPath>
           <path
             id={id("patch")}
             d="M99 72 Q152 65 208 74 L206 137 Q151 143 100 135 Z"
@@ -126,40 +152,37 @@ function BackpatchPreview({ value }: { value: Backpatch }) {
           <g filter={url("warp")}>
             <use href={"#" + id("patch")} fill="#e3e2da" />
             <path
+              data-backpatch-strip
               d="M103 77 Q151 70 204 79 L203 102 Q151 96 103 101Z"
               fill="#193c78"
             />
-            <text
-              data-backpatch-name
-              fill="#f0eee8"
-              fontFamily="Arial,sans-serif"
-              fontWeight="800"
-              fontSize={nameFontSize}
-              clipPath={url("name-clip")}
-            >
-              <textPath
-                href={"#" + id("name")}
-                startOffset="50%"
+            {nameLines.map((line, index) => (
+              <text
+                data-backpatch-name-line
+                key={`${line}-${index}`}
+                x="153"
+                y={lineYs[index]}
                 textAnchor="middle"
-                textLength={shouldFitName ? 84 : undefined}
-                lengthAdjust="spacingAndGlyphs"
+                fill="#f0eee8"
+                fontFamily="Arial,sans-serif"
+                fontWeight="800"
+                fontSize={nameFontSize.toFixed(2)}
               >
-                {text}
-              </textPath>
-            </text>
+                {line}
+              </text>
+            ))}
             <text
+              data-backpatch-country
+              x="154"
+              y="125"
+              textAnchor="middle"
+              dominantBaseline="middle"
               fill="#193c78"
               fontFamily="Arial,sans-serif"
               fontWeight="900"
               fontSize="22"
             >
-              <textPath
-                href={"#" + id("country")}
-                startOffset="50%"
-                textAnchor="middle"
-              >
-                {value.country || "KAZ"}
-              </textPath>
+              {value.country || "KAZ"}
             </text>
             <use href={"#" + id("patch")} fill={url("fold")} />
             <use href={"#" + id("patch")} fill={url("weave")} />

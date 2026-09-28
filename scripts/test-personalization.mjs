@@ -2,7 +2,7 @@ import "./env.mjs";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { mkdir } from "node:fs/promises";
-import { chromium } from "playwright";
+import { chromium, firefox, webkit } from "playwright";
 
 const port = "4176";
 const url =
@@ -15,6 +15,9 @@ const server = process.env.TEST_URL
       stdio: "ignore",
     });
 let browser;
+const browserName = process.env.PLAYWRIGHT_BROWSER || "chromium";
+const browserType = { chromium, firefox, webkit }[browserName];
+if (!browserType) throw new Error("Unknown Playwright browser: " + browserName);
 const artifacts = "test-results/targeted";
 const overlap = (a, b) =>
   a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
@@ -26,9 +29,12 @@ try {
     if (i === 59) throw new Error("Preview server did not become ready");
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
-  browser = await chromium.launch({
+  browser = await browserType.launch({
     headless: true,
-    channel: process.env.PLAYWRIGHT_CHANNEL || undefined,
+    channel:
+      browserName === "chromium"
+        ? process.env.PLAYWRIGHT_CHANNEL || undefined
+        : undefined,
   });
   const page = await browser.newPage({
     viewport: { width: 1440, height: 1000 },
@@ -180,31 +186,46 @@ try {
       waitUntil: "networkidle",
     });
     await modal.getByLabel("Включить кастомизацию").check();
-    await modal.getByLabel("Фамилия спортсмена").fill("N.MARATOVA");
-    await modal.getByLabel("Код страны", { exact: true }).fill("KAZ");
     const preview = modal.locator(
       width > 760 ? ".desktop-preview" : ".mobile-preview",
     );
     assert.equal(
-      await preview.locator("textPath").first().textContent(),
-      "N.MARATOVA",
+      await preview.locator("[data-backpatch-name-line]").allTextContents().then((lines) => lines.join("")),
+      "ВАША ФАМИЛИЯ",
     );
+    await preview.screenshot({
+      path: `${artifacts}/backpatch-placeholder-${width}.png`,
+    });
+    await modal.getByLabel("Фамилия спортсмена").fill("N.MARATOVA");
+    await modal.getByLabel("Код страны", { exact: true }).fill("KAZ");
     assert.equal(
-      await preview.locator("textPath").first().getAttribute("textLength"),
-      "84",
-      "Medium backpatch names must be fitted inside the blue strip",
+      await preview.locator("[data-backpatch-name-line]").allTextContents().then((lines) => lines.join("")),
+      "N.MARATOVA",
     );
     await modal
       .getByLabel("Фамилия спортсмена")
       .fill("A.VERYLONGSURNAME-NAME");
-    assert.equal(
-      await preview.locator("textPath").first().getAttribute("textLength"),
-      "84",
-      "Long backpatch names must remain fitted",
+    const nameBounds = await preview.evaluate((element) => {
+      const names = Array.from(element.querySelectorAll("[data-backpatch-name-line]"));
+      const strip = element.querySelector("[data-backpatch-strip]");
+      const boxes = names.map((name) => name.getBoundingClientRect());
+      const stripBox = strip.getBoundingClientRect();
+      return {
+        textLeft: Math.min(...boxes.map((box) => box.left)),
+        textRight: Math.max(...boxes.map((box) => box.right)),
+        textWidth: Math.max(...boxes.map((box) => box.width)),
+        stripLeft: stripBox.left,
+        stripRight: stripBox.right,
+      };
+    });
+    assert.ok(
+      nameBounds.textWidth > 8,
+      `${browserName}: long backpatch name must remain visible`,
     );
     assert.ok(
-      await preview.locator("[data-backpatch-name]").getAttribute("clip-path"),
-      "Backpatch name must be clipped to the blue strip as a final guard",
+      nameBounds.textLeft >= nameBounds.stripLeft &&
+        nameBounds.textRight <= nameBounds.stripRight,
+      `${browserName}: long backpatch name must remain inside the blue strip`,
     );
     await preview.screenshot({
       path: `${artifacts}/backpatch-long-${width}.png`,
@@ -349,7 +370,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    "PASS: hero at 1920/1440/1024/768/390/375; comparison at desktop/390/375/320; 3 real embroidery photos; all scripts/fonts/orientations/colors; backpatch; all zones persist in cart and combined order; belt edit; no browser errors.",
+    `PASS (${browserName}): hero at 1920/1440/1024/768/390/375; comparison at desktop/390/375/320; 3 real embroidery photos; all scripts/fonts/orientations/colors; backpatch; all zones persist in cart and combined order; belt edit; no browser errors.`,
   );
 } finally {
   await browser?.close();

@@ -178,8 +178,8 @@ try {
   assert.equal(await dialog.getByLabel("Цвет нити").count(), 0);
   await dialog.getByLabel("Фамилия спортсмена").fill("A. TESTOV");
   await dialog.getByLabel("Код страны", { exact: true }).fill("JPN");
-  assert.equal(await page.locator(".desktop-preview textPath").first().textContent(), "A. TESTOV");
-  assert.equal(await page.locator(".desktop-preview textPath").nth(1).textContent(), "JPN");
+  assert.deepEqual(await page.locator(".desktop-preview [data-backpatch-name-line]").allTextContents(), ["A. TESTOV"]);
+  assert.equal(await page.locator(".desktop-preview [data-backpatch-country]").textContent(), "JPN");
   await dialog.getByRole("button", { name: "Вышивка", exact: true }).click();
   await dialog.getByLabel("Текст вышивки").fill("柔道・Алға & +");
   await dialog.getByLabel("Место нанесения").selectOption("Штаны");
@@ -446,7 +446,10 @@ try {
   const modal = mobile.locator("dialog");
   await modal.getByLabel("Фамилия спортсмена").fill("N.MARATOVA");
   await modal.getByLabel("Код страны", { exact: true }).fill("KAZ");
-  assert.equal(await mobile.locator(".mobile-preview textPath").first().textContent(), "N.MARATOVA");
+  assert.deepEqual(
+    await mobile.locator(".mobile-preview [data-backpatch-name-line]").allTextContents(),
+    ["N.MARATOVA"],
+  );
   await modal.getByRole("button", { name: "Вышивка", exact: true }).click();
   await modal.getByLabel("Текст вышивки").fill("柔道");
   for (const zone of ["Куртка", "Штаны"]) {
