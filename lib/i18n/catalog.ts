@@ -50,14 +50,14 @@ const en: Record<string, ProductCopy> = {
 const kkSpecs: Record<string, ProductSpec[]> = {
   "zone-migaku": [
     { key: "composition", value: "70% мақта / 30% полиэстер" },
-    { key: "origin", value: "Пәкістан" },
+    { key: "origin", value: "Жапония" },
     { key: "certification", value: "IJF сертификаты бар" },
     { key: "purpose", value: "Жаттығу және жарыс" },
     { key: "feature", value: "Бағасы мен сапасы үйлескен модель" },
   ],
   "zone-idomu": [
     { key: "composition", value: "70% мақта / 30% полиэстер" },
-    { key: "origin", value: "Пәкістан" },
+    { key: "origin", value: "Жапония" },
     { key: "certification", value: "IJF сертификаты бар" },
     { key: "purpose", value: "Қарқынды жаттығу және жарыс" },
     { key: "feature", value: "Тығыз әрі ұзақ қолдануға арналған" },
@@ -106,14 +106,14 @@ const kkSpecs: Record<string, ProductSpec[]> = {
 const enSpecs: Record<string, ProductSpec[]> = {
   "zone-migaku": [
     { key: "composition", value: "70% cotton / 30% polyester" },
-    { key: "origin", value: "Pakistan" },
+    { key: "origin", value: "Japan" },
     { key: "certification", value: "IJF certified" },
     { key: "purpose", value: "Training and competition" },
     { key: "feature", value: "Balanced price and quality" },
   ],
   "zone-idomu": [
     { key: "composition", value: "70% cotton / 30% polyester" },
-    { key: "origin", value: "Pakistan" },
+    { key: "origin", value: "Japan" },
     { key: "certification", value: "IJF certified" },
     { key: "purpose", value: "Intensive training and competition" },
     { key: "feature", value: "Dense, durability-focused construction" },

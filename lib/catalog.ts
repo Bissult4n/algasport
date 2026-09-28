@@ -91,7 +91,7 @@ export const products: Product[] = [
     price: 85000,
     specs: [
       { key: "composition", value: "70% хлопок / 30% полиэстер" },
-      { key: "origin", value: "Пакистан" },
+      { key: "origin", value: "Япония" },
       { key: "certification", value: "Сертифицировано IJF" },
       { key: "purpose", value: "Тренировки и соревнования" },
       { key: "feature", value: "Баланс цены и качества" },
@@ -107,7 +107,7 @@ export const products: Product[] = [
     price: 100000,
     specs: [
       { key: "composition", value: "70% хлопок / 30% полиэстер" },
-      { key: "origin", value: "Пакистан" },
+      { key: "origin", value: "Япония" },
       { key: "certification", value: "Сертифицировано IJF" },
       { key: "purpose", value: "Интенсивные тренировки и соревнования" },
       { key: "feature", value: "Плотное и долговечное исполнение" },
