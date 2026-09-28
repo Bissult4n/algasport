@@ -111,7 +111,7 @@ try {
   for (const label of [
     "Вариант/цвет: Синий",
     "Текст: 柔道・Алға & +",
-    "Штаны / верхняя часть штанины",
+    "Штаны / нижняя часть штанины",
     "Цвет: Золотой",
     "Ориентация: Горизонтально",
   ])
@@ -125,7 +125,7 @@ try {
     "Тауар: Adidas Champion II",
     "Нұсқа/түс: Көк",
     "Мәтін: 柔道・Алға & +",
-    "Шалбар / шалбар балағының жоғарғы бөлігі",
+    "Шалбар / шалбар балағының төменгі бөлігі",
     "Бағасы: Сұрау бойынша",
   ]) assert.ok(kkMessage.includes(value), "KZ order: " + value);
   assert.ok(!kkMessage.includes("Здравствуйте"), "KZ order must not contain the Russian greeting");
@@ -135,7 +135,7 @@ try {
     "Product: Adidas Champion II",
     "Option/color: Blue",
     "Text: 柔道・Алға & +",
-    "Trousers / upper trouser leg",
+    "Trousers / lower trouser leg",
     "Price: Price on request",
   ]) assert.ok(enMessage.includes(value), "EN order: " + value);
   assert.ok(!enMessage.includes("Здравствуйте"), "EN order must not contain the Russian greeting");
@@ -298,6 +298,44 @@ try {
     assert.equal(product.price, price);
     assert.equal(product.specs.length, facts);
   }
+  for (const id of [
+    "adidas-champion-iii-green",
+    "adidas-champion-iii-gold",
+    "adidas-champion-iii-red",
+  ]) {
+    const chinese = { ...o.newItem(id), key: id + "-chinese" };
+    const pakistani = {
+      ...o.newItem(id, "Пакистанский"),
+      key: id + "-pakistani",
+    };
+    const original = {
+      ...o.newItem(id, "Оригинальный"),
+      key: id + "-original",
+    };
+    assert.equal(chinese.variant, "Китайский");
+    assert.equal(o.itemTotal(chinese), 30000);
+    assert.equal(o.itemTotal(pakistani), 75000);
+    assert.equal(o.itemTotal(original), 180000);
+    const message = o.buildOrderMessage([chinese, pakistani, original]);
+    for (const value of [
+      "Версия: Китайский",
+      "Цена: 30\u00a0000 ₸",
+      "Версия: Пакистанский",
+      "Цена: 75\u00a0000 ₸",
+      "Версия: Оригинальный",
+      "Цена: 180\u00a0000 ₸",
+      "Итого: 285\u00a0000 ₸",
+    ]) assert.ok(message.includes(value), `${id}: ${value}`);
+  }
+  const legacyChampion = {
+    ...o.newItem("adidas-champion-iii-green"),
+    key: "legacy-champion-iii",
+    variant: "Цвет по фото / уточнить",
+  };
+  assert.equal(
+    o.parseCart(JSON.stringify([legacyChampion]))[0].variant,
+    "Китайский",
+  );
   for (const orientation of ["vertical", "horizontal"]) {
     const belt = { ...stitched, customization: { ...stitched.customization, placement: "Пояс", orientation, text: "柔道 勝 Алға ӘҒҚҢӨҰҮҺІ ALGA" } };
     assert.deepEqual(o.parseCart(JSON.stringify([belt])), [belt], "Belt survives cart persistence");

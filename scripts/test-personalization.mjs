@@ -240,7 +240,10 @@ try {
     const images = new Set();
     for (const zone of ["Куртка", "Штаны", "Пояс"]) {
       await modal.getByLabel("Место нанесения").selectOption(zone);
-      images.add(await preview.locator("image").getAttribute("href"));
+      const image = await preview.locator("image").getAttribute("href");
+      images.add(image);
+      if (zone === "Куртка" || zone === "Штаны")
+        assert.ok(image.includes("judogi-embroidery-template.png"));
       assert.equal(
         await preview
           .locator("[data-embroidery-zone]")
@@ -300,7 +303,7 @@ try {
         });
       }
     }
-    assert.equal(images.size, 3, "Each embroidery zone needs a distinct photo");
+    assert.equal(images.size, 2, "Jacket and trousers share the supplied template; belt stays separate");
     assert.ok(
       [...images].every((src) => src.includes("/images/personalization/")),
     );
@@ -357,7 +360,7 @@ try {
     await page.locator(".cart-button").click();
     await modal.getByRole("button", { name: "Оформить заказ", exact: true }).click();
     const combinedOrder = await modal.getByLabel("Текст заказа").inputValue();
-    for (const expected of ["Куртка / нижняя часть", "Штаны / верхняя часть штанины", "Пояс / возле одного из концов", "Красный", "Синий", "Золотой", "Горизонтально", "Вертикально"])
+    for (const expected of ["Куртка / нижняя передняя пола куртки", "Штаны / нижняя часть штанины", "Пояс / возле одного из концов", "Красный", "Синий", "Золотой", "Горизонтально", "Вертикально"])
       assert.ok(combinedOrder.includes(expected), "Combined cart order: " + expected);
     assert.equal(combinedOrder.split("柔道 Алға").length - 1, 3);
     await page.keyboard.press("Escape");
@@ -370,7 +373,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    `PASS (${browserName}): hero at 1920/1440/1024/768/390/375; comparison at desktop/390/375/320; 3 real embroidery photos; all scripts/fonts/orientations/colors; backpatch; all zones persist in cart and combined order; belt edit; no browser errors.`,
+    `PASS (${browserName}): hero at 1920/1440/1024/768/390/375; comparison at desktop/390/375/320; supplied judogi embroidery template and belt photo; all scripts/fonts/orientations/colors; backpatch; all zones persist in cart and combined order; belt edit; no browser errors.`,
   );
 } finally {
   await browser?.close();

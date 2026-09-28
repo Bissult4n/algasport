@@ -151,7 +151,10 @@ export const products: Product[] = [
     ],
     source:
       "https://imssport.pl/pl/p/Judoga-Adidas-Champion-III-2-IJF-GREEN-LABEL/986",
-    variants: ["Цвет по фото / уточнить"],
+    price: 30000,
+    variants: ["Китайский", "Пакистанский", "Оригинальный"],
+    variantLabel: "Версия",
+    variantPrices: { Китайский: 30000, Пакистанский: 75000, Оригинальный: 180000 },
     specs: [
       { key: "model", value: "Champion III Green" },
       { key: "certification", value: "Маркировка IJF Green Label" },
@@ -175,7 +178,10 @@ export const products: Product[] = [
     ],
     source:
       "https://www.roninwear.com/en/adidas-champion-iii-ijf-judogi-white-gold-p-22047.html",
-    variants: ["Белый / золотые детали"],
+    price: 30000,
+    variants: ["Китайский", "Пакистанский", "Оригинальный"],
+    variantLabel: "Версия",
+    variantPrices: { Китайский: 30000, Пакистанский: 75000, Оригинальный: 180000 },
     specs: [
       { key: "model", value: "Champion III Gold" },
       { key: "purpose", value: "Дзюдо" },
@@ -200,7 +206,10 @@ export const products: Product[] = [
     ],
     source:
       "https://gi-obi.com/urun/adidas-champion-iii-red-ijf-onayli-judo-gi/",
-    variants: ["Цвет по фото / уточнить"],
+    price: 30000,
+    variants: ["Китайский", "Пакистанский", "Оригинальный"],
+    variantLabel: "Версия",
+    variantPrices: { Китайский: 30000, Пакистанский: 75000, Оригинальный: 180000 },
     specs: [
       { key: "model", value: "Champion III Red" },
       { key: "certification", value: "Маркировка IJF Red Label" },
@@ -448,6 +457,11 @@ export const normalizeProductVariant = (
     return productId === "mizuno-blue" ? "blue-licensed" : "white-licensed";
   if (typeof variant !== "string") return null;
   if (product.variants.includes(variant)) return variant;
+  if (
+    product.id.startsWith("adidas-champion-iii-") &&
+    ["Цвет по фото / уточнить", "Белый / золотые детали"].includes(variant)
+  )
+    return "Китайский";
   if (product.id === "mizuno-judogi") {
     const color = productId === "mizuno-blue" ? "blue" : "white";
     if (variant === "Лицензионный" || variant === "Белый" || variant === "Синий")

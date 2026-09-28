@@ -30,7 +30,7 @@ for (const source of sources) {
 }
 const images = await readdir("out/images");
 const previewSources = JSON.parse(await readFile("docs/personalization-image-sources.json", "utf8"));
-assert.equal(previewSources.length, 3);
+assert.equal(previewSources.length, 4);
 for (const source of previewSources) await access(source.file.replace(/^public\//, "out/"));
 for (const old of [
   "hero-gi.webp",

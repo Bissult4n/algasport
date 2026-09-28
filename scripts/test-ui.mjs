@@ -195,7 +195,7 @@ try {
   await dialog.getByRole("button", { name: "Оформить заказ", exact: true }).click();
   const message = await dialog.getByLabel("Текст заказа").inputValue();
   console.log("Checked personalized cart and order");
-  for (const part of ["Zone Migaku", "FitLine Activize", "180 см, 75 кг", "柔道・Алға & +", "Штаны / верхняя часть штанины", "Горизонтально", "Цена по запросу"]) assert.ok(message.includes(part), part);
+  for (const part of ["Zone Migaku", "FitLine Activize", "180 см, 75 кг", "柔道・Алға & +", "Штаны / нижняя часть штанины", "Горизонтально", "Цена по запросу"]) assert.ok(message.includes(part), part);
   await page.bringToFront();
   await dialog.getByRole("button", { name: "Скопировать заказ" }).click();
   assert.equal((await page.evaluate(() => Promise.race([
@@ -339,6 +339,20 @@ try {
     assert.ok(beltOrderText.includes(value), value);
   await page.evaluate(key => localStorage.removeItem(key), cartKey);
   await page.reload({ waitUntil: "networkidle" });
+
+  for (const id of [
+    "adidas-champion-iii-green",
+    "adidas-champion-iii-gold",
+    "adidas-champion-iii-red",
+  ]) {
+    await page.goto(url + "#product/" + id, { waitUntil: "networkidle" });
+    assert.equal(await dialog.getByLabel("Версия").inputValue(), "Китайский");
+    assert.equal((await dialog.locator(".detail-price").textContent()).trim(), "30 000 ₸");
+    await dialog.getByLabel("Версия").selectOption("Пакистанский");
+    assert.equal((await dialog.locator(".detail-price").textContent()).trim(), "75 000 ₸");
+    await dialog.getByLabel("Версия").selectOption("Оригинальный");
+    assert.equal((await dialog.locator(".detail-price").textContent()).trim(), "180 000 ₸");
+  }
 
   await page.goto(url + "#product/zone-migaku", { waitUntil: "networkidle" });
   await dialog.getByLabel("Включить кастомизацию").check();

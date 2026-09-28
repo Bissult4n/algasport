@@ -20,28 +20,28 @@ const japanese = localFont({
 // Coordinates follow the photographed fabric, not the size of the reference's red marks.
 const scenes = {
   Куртка: {
-    file: "jacket.webp",
+    file: "judogi-embroidery-template.png",
     background: "#c1d0e3",
-    photoKey: "preview.jacketPhoto",
-    x: 181,
-    y: 197,
-    angle: 3,
-    skew: -5,
-    size: 9,
-    length: 20,
-    width: 34,
+    photoKey: "preview.judogiTemplatePhoto",
+    x: 142,
+    y: 244,
+    angle: -2,
+    skew: -2,
+    size: 11,
+    length: 36,
+    width: 30,
   },
   Штаны: {
-    file: "pants.webp",
-    background: "#ffffff",
-    photoKey: "preview.pantsPhoto",
-    x: 165,
-    y: 99,
-    angle: -3,
-    skew: 2,
+    file: "judogi-embroidery-template.png",
+    background: "#c1d0e3",
+    photoKey: "preview.judogiTemplatePhoto",
+    x: 224,
+    y: 290,
+    angle: -1,
+    skew: 1,
     size: 11,
-    length: 40,
-    width: 32,
+    length: 38,
+    width: 30,
   },
   Пояс: {
     file: "belt.webp",
@@ -60,7 +60,7 @@ const scenes = {
   {
     file: string;
     background: string;
-    photoKey: "preview.jacketPhoto" | "preview.pantsPhoto" | "preview.beltPhoto";
+    photoKey: "preview.judogiTemplatePhoto" | "preview.beltPhoto";
     x: number;
     y: number;
     angle: number;
