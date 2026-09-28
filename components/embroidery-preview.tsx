@@ -29,7 +29,6 @@ const scenes = {
     skew: -2,
     size: 15,
     length: 62,
-    width: 52,
   },
   Штаны: {
     file: "judogi-embroidery-template.png",
@@ -41,7 +40,6 @@ const scenes = {
     skew: 1,
     size: 15,
     length: 60,
-    width: 48,
   },
   Пояс: {
     file: "belt.webp",
@@ -53,7 +51,6 @@ const scenes = {
     skew: -6,
     size: 14,
     length: 38,
-    width: 32,
   },
 } satisfies Record<
   Embroidery["placement"],
@@ -67,7 +64,6 @@ const scenes = {
     skew: number;
     size: number;
     length: number;
-    width: number;
   }
 >;
 
@@ -85,11 +81,8 @@ export function EmbroideryPreview({ value }: { value: Embroidery }) {
           (part) => part.segment,
         )
       : Array.from(text.normalize("NFC"));
-  const vertical = value.orientation === "vertical";
   const step = Math.min(scene.size * 1.25, scene.length / chars.length);
-  const size = vertical
-    ? Math.min(scene.size, step / 1.15)
-    : Math.min(scene.size, scene.width / Math.max(1, chars.length));
+  const size = Math.min(scene.size, step / 1.15);
   const detailSize = Math.max(16, Math.min(30, 260 / Math.max(1, chars.length)));
   const family =
     (value.font === "Modern" ? "Arial" : "Georgia") +
@@ -160,17 +153,11 @@ export function EmbroideryPreview({ value }: { value: Embroidery }) {
             fontStyle={value.font === "Brush" ? "italic" : "normal"}
             textAnchor="middle"
           >
-            {vertical ? (
-              chars.map((char, i) => (
-                <text key={i} x="0" y={i * step}>
-                  {char}
-                </text>
-              ))
-            ) : (
-              <text x="0" y="0">
-                {text}
+            {chars.map((char, i) => (
+              <text key={i} x="0" y={i * step}>
+                {char}
               </text>
-            )}
+            ))}
           </g>
         </defs>
         <image
@@ -182,7 +169,7 @@ export function EmbroideryPreview({ value }: { value: Embroidery }) {
         />
         <g
           data-embroidery-zone={value.placement}
-          data-orientation={value.orientation}
+          data-orientation="vertical"
           transform={`translate(${scene.x} ${scene.y}) rotate(${scene.angle}) skewX(${scene.skew}) scale(1 .97)`}
           filter={"url(#" + id("thread-relief") + ")"}
         >

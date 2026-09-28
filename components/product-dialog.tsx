@@ -493,23 +493,6 @@ export function ProductDialog({
                               ))}
                             </select>
                           </label>
-                          <label className="input-label">
-                            {t("custom.orientation")}
-                            <select
-                              aria-label={t("custom.orientation")}
-                              className="field"
-                              value={embroidery.orientation}
-                              onChange={(e) =>
-                                updateEmbroidery({
-                                  orientation: e.target
-                                    .value as Embroidery["orientation"],
-                                })
-                              }
-                            >
-                              <option value="vertical">{t("custom.vertical")}</option>
-                              <option value="horizontal">{t("custom.horizontal")}</option>
-                            </select>
-                          </label>
                         </div>
                         {embroidery.legacyNote && (
                           <p className="mode-description">

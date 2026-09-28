@@ -185,7 +185,7 @@ try {
   assert.equal(await dialog.getByLabel("Надпись на японском").inputValue(), "柔道・前進");
   await dialog.getByLabel("Место нанесения").selectOption("Штаны");
   await dialog.getByLabel("Цвет нити").selectOption("Золотой");
-  await dialog.getByLabel("Ориентация").selectOption("horizontal");
+  assert.equal(await dialog.getByLabel("Ориентация").count(), 0);
   await dialog.getByRole("button", { name: "IJF backpatch", exact: true }).click();
   assert.equal(await dialog.getByLabel("Фамилия спортсмена").inputValue(), "A. TESTOV");
   await dialog.getByRole("button", { name: "Вышивка", exact: true }).click();
@@ -196,7 +196,8 @@ try {
   await dialog.getByRole("button", { name: "Оформить заказ", exact: true }).click();
   const message = await dialog.getByLabel("Текст заказа").inputValue();
   console.log("Checked personalized cart and order");
-  for (const part of ["Zone Migaku", "FitLine Activize", "180 см, 75 кг", "柔道・前進", "Штаны / верхняя боковая часть штанов", "Горизонтально", "Цена по запросу"]) assert.ok(message.includes(part), part);
+  for (const part of ["Zone Migaku", "FitLine Activize", "180 см, 75 кг", "柔道・前進", "Штаны / верхняя боковая часть штанов", "Цена по запросу"]) assert.ok(message.includes(part), part);
+  assert.ok(!message.includes("Ориентация:"));
   await page.bringToFront();
   await dialog.getByRole("button", { name: "Скопировать заказ" }).click();
   assert.equal((await page.evaluate(() => Promise.race([

@@ -106,7 +106,7 @@ try {
       text: j.toJapaneseEmbroidery("柔道 Алға"),
       placement: "Штаны",
       color: "Золотой",
-      orientation: "horizontal",
+      orientation: "vertical",
     },
   };
   const stitchMessage = o.buildOrderMessage([stitched]);
@@ -115,9 +115,9 @@ try {
     "Текст: 柔道・前進",
     "Штаны / верхняя боковая часть штанов",
     "Цвет: Золотой",
-    "Ориентация: Горизонтально",
   ])
     assert.ok(stitchMessage.includes(label), label);
+  assert.ok(!stitchMessage.includes("Ориентация:"));
   for (const label of ["Фамилия:", "Страна:"])
     assert.ok(!stitchMessage.includes(label));
   assert.deepEqual(o.parseCart(JSON.stringify([stitched])), [stitched]);
@@ -338,15 +338,18 @@ try {
     o.parseCart(JSON.stringify([legacyChampion]))[0].variant,
     "Китайский",
   );
-  for (const orientation of ["vertical", "horizontal"]) {
-    const sourceText = "柔道 победа Алға Сериков";
-    const belt = { ...stitched, customization: { ...stitched.customization, placement: "Пояс", orientation, sourceText, text: j.toJapaneseEmbroidery(sourceText) } };
-    assert.deepEqual(o.parseCart(JSON.stringify([belt])), [belt], "Belt survives cart persistence");
-    const message = o.buildOrderMessage([belt]);
-    for (const value of ["Пояс / возле одного из концов", belt.customization.text, "Цвет: Золотой", orientation === "vertical" ? "Вертикально" : "Горизонтально"])
-      assert.ok(message.includes(value), value);
-    assert.equal(new URL(o.whatsappUrl(message, "77001234567")).searchParams.get("text"), message);
-  }
+  const sourceText = "柔道 победа Алға Сериков";
+  const belt = { ...stitched, customization: { ...stitched.customization, placement: "Пояс", sourceText, text: j.toJapaneseEmbroidery(sourceText) } };
+  assert.deepEqual(o.parseCart(JSON.stringify([belt])), [belt], "Belt survives cart persistence");
+  const beltMessage = o.buildOrderMessage([belt]);
+  for (const value of ["Пояс / возле одного из концов", belt.customization.text, "Цвет: Золотой"])
+    assert.ok(beltMessage.includes(value), value);
+  assert.equal(new URL(o.whatsappUrl(beltMessage, "77001234567")).searchParams.get("text"), beltMessage);
+  assert.equal(
+    c.parseCustomization({ ...stitched.customization, orientation: "horizontal" }).orientation,
+    "vertical",
+    "Old horizontal embroidery migrates to the fixed diagonal layout",
+  );
   assert.equal(c.parseCustomization({ ...stitched.customization, placement: "Unknown" }), null);
   assert.equal(j.toJapaneseEmbroidery("победа"), "勝利");
   assert.equal(j.toJapaneseEmbroidery("victory"), "勝利");

@@ -19,7 +19,7 @@ export type Embroidery = {
   placement: "Куртка" | "Штаны" | "Пояс";
   color: keyof typeof embroideryColors;
   font: "Modern" | "Serif" | "Brush";
-  orientation: "horizontal" | "vertical";
+  orientation: "vertical";
   legacyNote?: string;
 };
 export type Customization = Backpatch | Embroidery;
@@ -61,11 +61,6 @@ export const embroideryColorText = (
   } satisfies Record<Embroidery["color"], TranslationKey>;
   return translate(locale, keys[color]);
 };
-
-export const orientationText = (
-  orientation: Embroidery["orientation"],
-  locale: Locale = "ru",
-) => translate(locale, orientation === "vertical" ? "custom.vertical" : "custom.horizontal");
 
 export function parseCustomization(raw: unknown): Customization | null {
   if (!raw || typeof raw !== "object") return null;
@@ -129,7 +124,8 @@ export function parseCustomization(raw: unknown): Customization | null {
     placement: legacy ? "Куртка" : (c.placement as Embroidery["placement"]),
     color: c.color as Embroidery["color"],
     font: c.font as Embroidery["font"],
-    orientation: c.orientation === "horizontal" ? "horizontal" : "vertical",
+    // Older horizontal selections migrate to the single supported layout.
+    orientation: "vertical",
     ...(legacyNote ? { legacyNote } : {}),
   };
 }

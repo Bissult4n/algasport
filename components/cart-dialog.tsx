@@ -15,7 +15,7 @@ import {
 } from "@/lib/orders";
 import { CUSTOMIZATION_PRICES, INSTAGRAM_URL } from "@/lib/shop-config";
 import { useState } from "react";
-import { embroideryColorText, orientationText, placementText } from "@/lib/customization";
+import { embroideryColorText, placementText } from "@/lib/customization";
 import { Arrow, Dialog, Photo, Quantity } from "./shop-ui";
 import { useI18n } from "@/lib/i18n/context";
 import {
@@ -119,8 +119,6 @@ export function CartDialog({
                             : placementText(item.customization, locale)}{" "}
                           · {embroideryColorText(item.customization.color, locale)} ·{" "}
                           {item.customization.font}
-                          <br />
-                          {orientationText(item.customization.orientation, locale)}
                         </>
                       )}
                       <br />

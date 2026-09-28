@@ -13,7 +13,6 @@ import {
 import {
   defaultCustomization,
   embroideryColorText,
-  orientationText,
   parseCustomization,
   placementText,
   type Customization,
@@ -136,8 +135,6 @@ export function buildOrderMessage(items: CartItem[], locale: Locale = "ru"): str
                     translate(locale, "orderMessage.color") + ": " +
                       embroideryColorText(c.color, locale),
                     translate(locale, "orderMessage.font") + ": " + c.font,
-                    translate(locale, "orderMessage.orientation") + ": " +
-                      orientationText(c.orientation, locale),
                     ...(c.legacyNote && locale === "ru" ? [c.legacyNote] : []),
                   ]),
               translate(locale, "orderMessage.extra") + ": " +

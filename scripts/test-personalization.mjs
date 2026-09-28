@@ -236,6 +236,7 @@ try {
       /adidas-ii-back/,
     );
     await modal.getByRole("button", { name: "Вышивка", exact: true }).click();
+    assert.equal(await modal.getByLabel("Ориентация").count(), 0);
     await modal.getByLabel("Цвет нити").selectOption("Золотой");
     const images = new Set();
     for (const zone of ["Куртка", "Штаны", "Пояс"]) {
@@ -283,20 +284,17 @@ try {
         );
         for (const font of ["Modern", "Serif", "Brush"]) {
           await modal.getByLabel("Шрифт", { exact: true }).selectOption(font);
-          for (const orientation of ["horizontal", "vertical"]) {
-            await modal.getByLabel("Ориентация").selectOption(orientation);
-            const letters = preview.locator('defs g[id$="letters"]');
-            assert.equal(
-              (await letters.textContent()).normalize("NFC"),
-              japaneseText.normalize("NFC"),
-            );
-            assert.equal(
-              await preview
-                .locator("[data-orientation]")
-                .getAttribute("data-orientation"),
-              orientation,
-            );
-          }
+          const letters = preview.locator('defs g[id$="letters"]');
+          assert.equal(
+            (await letters.textContent()).normalize("NFC"),
+            japaneseText.normalize("NFC"),
+          );
+          assert.equal(
+            await preview
+              .locator("[data-orientation]")
+              .getAttribute("data-orientation"),
+            "vertical",
+          );
         }
       }
       if (zone === "Куртка") {
@@ -317,27 +315,24 @@ try {
         assert.equal(await preview.locator("[data-embroidery-zone] > use").first().getAttribute("fill"), hex);
       }
       await page.evaluate(() => document.fonts.ready);
-      for (const orientation of ["horizontal", "vertical"]) {
-        await modal.getByLabel("Ориентация").selectOption(orientation);
-        await preview.evaluate((element) => element.scrollIntoView({ block: "center", behavior: "instant" }));
-        assert.ok(await preview.locator("figcaption").evaluate((element) => {
-          const box = element.getBoundingClientRect();
-          const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
-          return element === hit || element.contains(hit);
-        }), "Placement caption must remain readable, not covered by the sticky footer");
-        await preview.screenshot({
-          path: `${artifacts}/embroidery-${zone}-${orientation}-${width}.png`,
-        });
-      }
+      await preview.evaluate((element) => element.scrollIntoView({ block: "center", behavior: "instant" }));
+      assert.ok(await preview.locator("figcaption").evaluate((element) => {
+        const box = element.getBoundingClientRect();
+        const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+        return element === hit || element.contains(hit);
+      }), "Placement caption must remain readable, not covered by the sticky footer");
+      await preview.screenshot({
+        path: `${artifacts}/embroidery-${zone}-vertical-${width}.png`,
+      });
     }
     assert.equal(images.size, 2, "Jacket and trousers share the supplied template; belt stays separate");
     assert.ok(
       [...images].every((src) => src.includes("/images/personalization/")),
     );
     const savedZones = [
-      { placement: "Куртка", color: "Красный", orientation: "vertical" },
-      { placement: "Штаны", color: "Синий", orientation: "horizontal" },
-      { placement: "Пояс", color: "Золотой", orientation: "vertical" },
+      { placement: "Куртка", color: "Красный" },
+      { placement: "Штаны", color: "Синий" },
+      { placement: "Пояс", color: "Золотой" },
     ];
     for (const [index, settings] of savedZones.entries()) {
       if (index > 0) {
@@ -347,7 +342,6 @@ try {
       }
       await modal.getByLabel("Место нанесения").selectOption(settings.placement);
       await modal.getByLabel("Цвет нити").selectOption(settings.color);
-      await modal.getByLabel("Ориентация").selectOption(settings.orientation);
       await modal.getByLabel("Исходный текст").fill("柔道 Алға");
       assert.equal(await modal.getByLabel("Надпись на японском").inputValue(), "柔道・前進");
       await modal.getByRole("button", { name: "Добавить в корзину", exact: true }).click();
@@ -360,6 +354,7 @@ try {
     for (const settings of savedZones) {
       const { customization } = cart.find((item) => item.customization.placement === settings.placement);
       for (const [key, value] of Object.entries(settings)) assert.equal(customization[key], value);
+      assert.equal(customization.orientation, "vertical");
       assert.equal(customization.sourceText, "柔道 Алға");
       assert.equal(customization.text, "柔道・前進");
     }
@@ -381,7 +376,6 @@ try {
     for (const expected of [
       "Пояс / возле одного из концов",
       "柔道・前進",
-      "Вертикально",
       "Золотой",
     ])
       assert.ok(order.includes(expected), expected);
@@ -389,8 +383,9 @@ try {
     await page.locator(".cart-button").click();
     await modal.getByRole("button", { name: "Оформить заказ", exact: true }).click();
     const combinedOrder = await modal.getByLabel("Текст заказа").inputValue();
-    for (const expected of ["Куртка / нижняя передняя пола куртки", "Штаны / верхняя боковая часть штанов", "Пояс / возле одного из концов", "Красный", "Синий", "Золотой", "Горизонтально", "Вертикально"])
+    for (const expected of ["Куртка / нижняя передняя пола куртки", "Штаны / верхняя боковая часть штанов", "Пояс / возле одного из концов", "Красный", "Синий", "Золотой"])
       assert.ok(combinedOrder.includes(expected), "Combined cart order: " + expected);
+    assert.ok(!combinedOrder.includes("Ориентация:"));
     assert.equal(combinedOrder.split("柔道・前進").length - 1, 3);
     await page.keyboard.press("Escape");
     await page.evaluate(() => localStorage.clear());
@@ -402,7 +397,7 @@ try {
   );
   assert.deepEqual(errors, []);
   console.log(
-    `PASS (${browserName}): hero at 1920/1440/1024/768/390/375; comparison at desktop/390/375/320; supplied judogi embroidery template and belt photo; all scripts/fonts/orientations/colors; backpatch; all zones persist in cart and combined order; belt edit; no browser errors.`,
+    `PASS (${browserName}): hero at 1920/1440/1024/768/390/375; comparison at desktop/390/375/320; supplied judogi embroidery template and belt photo; all scripts/fonts/fixed diagonal placement/colors; backpatch; all zones persist in cart and combined order; belt edit; no browser errors.`,
   );
 } finally {
   await browser?.close();
