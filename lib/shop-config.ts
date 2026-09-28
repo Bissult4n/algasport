@@ -1,5 +1,6 @@
 // Set international digits only here, then rebuild the static site.
-export const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
+export const WHATSAPP_NUMBER =
+  process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.trim() || "77751775141";
 export const INSTAGRAM_USERNAME = (process.env.NEXT_PUBLIC_INSTAGRAM_USERNAME ?? "alga_sport_shops").replace(/^@/, "");
 export const INSTAGRAM_URL = "https://www.instagram.com/" + encodeURIComponent(INSTAGRAM_USERNAME) + "/";
 export const SITE_URL = "https://alga-sport-shops.vercel.app";
