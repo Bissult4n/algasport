@@ -1,5 +1,5 @@
 "use client";
-import { getProduct } from "@/lib/catalog";
+import { getProduct, productHasSize, productImages } from "@/lib/catalog";
 import {
   buildOrderMessage,
   cartTotal,
@@ -8,10 +8,16 @@ import {
   whatsappUrl,
   type CartItem,
 } from "@/lib/orders";
-import { INSTAGRAM_URL } from "@/lib/shop-config";
+import { CUSTOMIZATION_PRICES, INSTAGRAM_URL } from "@/lib/shop-config";
 import { useState } from "react";
-import { placementText } from "@/lib/customization";
+import { embroideryColorText, orientationText, placementText } from "@/lib/customization";
 import { Arrow, Dialog, Photo, Quantity } from "./shop-ui";
+import { useI18n } from "@/lib/i18n/context";
+import {
+  localizedProduct,
+  localizedVariant,
+  localizedVariantLabel,
+} from "@/lib/i18n/catalog";
 
 export function CartDialog({
   items,
@@ -28,34 +34,51 @@ export function CartDialog({
   onEdit: (item: CartItem) => void;
   onOrder: () => void;
 }) {
+  const { locale, t } = useI18n();
   return (
-    <Dialog title="Ваша корзина" onClose={onClose}>
+    <Dialog title={t("cart.title")} onClose={onClose}>
       <div className="cart-body">
         {!items.length ? (
           <div className="empty-cart">
-            <span className="label">Начало вашего пути</span>
-            <h3>Здесь будет ваша экипировка</h3>
+            <span className="label">{t("cart.emptyEyebrow")}</span>
+            <h3>{t("cart.emptyTitle")}</h3>
             <p className="muted">
-              Выберите кимоно, FitLine или снаряжение в каталоге.
+              {t("cart.emptyCopy")}
             </p>
             <button className="btn-primary" onClick={onClose}>
-              Перейти в каталог <Arrow />
+              {t("cart.toCatalog")} <Arrow />
             </button>
           </div>
         ) : (
           items.map((item) => {
-            const p = getProduct(item.productId)!;
+            const rawProduct = getProduct(item.productId)!;
+            const p = localizedProduct(rawProduct, locale);
             return (
               <article className="cart-line" key={item.key}>
                 <div className="cart-photo">
-                  <Photo src={p.images[0]} alt={p.name} />
+                  <Photo
+                    src={productImages(rawProduct, item.variant)[0]}
+                    alt={p.name + ", " + localizedVariant(item.variant, locale)}
+                  />
                 </div>
                 <div className="cart-line-detail">
                   <h3>{p.name}</h3>
                   <p className="muted">
-                    {item.size ||
-                      (p.category === "kimono" ? "Размер: подбор" : "")}{" "}
-                    {item.variant}
+                    {productHasSize(rawProduct) && (
+                      <>
+                        {t("cart.size", {
+                          value: item.size || t(rawProduct.sizeField === "belt"
+                            ? "cart.sizeOrder"
+                            : "cart.sizeHelp"),
+                        })}
+                        <br />
+                      </>
+                    )}
+                    {rawProduct.variantLabel
+                      ? `${localizedVariantLabel(rawProduct.variantLabel, locale)}: ${localizedVariant(item.variant, locale)}`
+                      : rawProduct.variantSwatches
+                        ? `${t("product.kimonoColor")}: ${localizedVariant(item.variant, locale)}`
+                        : localizedVariant(item.variant, locale)}
                   </p>
                   {item.customization.enabled && (
                     <p className="personalization-summary">
@@ -64,39 +87,43 @@ export function CartDialog({
                           IJF backpatch: {item.customization.surname} /{" "}
                           {item.customization.country}
                           <br />
-                          Спина · фиксировано
+                          {t("cart.backFixed")}
                         </>
                       ) : (
                         <>
-                          Вышивка: {item.customization.text}
+                          {t("cart.embroidery", { text: item.customization.text })}
                           <br />
-                          {item.customization.legacyNote ||
-                            placementText(item.customization)}{" "}
-                          · {item.customization.color} ·{" "}
+                          {item.customization.legacyNote
+                            ? t("orderMessage.needsAgreement")
+                            : placementText(item.customization, locale)}{" "}
+                          · {embroideryColorText(item.customization.color, locale)} ·{" "}
                           {item.customization.font}
                           <br />
-                          {item.customization.orientation === "vertical"
-                            ? "Вертикально"
-                            : "Горизонтально"}
+                          {orientationText(item.customization.orientation, locale)}
                         </>
+                      )}
+                      <br />
+                      {t("custom.extra")}: {priceText(
+                        CUSTOMIZATION_PRICES[item.customization.type],
+                        locale,
                       )}
                     </p>
                   )}
-                  <strong>{priceText(itemTotal(item))}</strong>
+                  <strong>{priceText(itemTotal(item), locale)}</strong>
                   <div className="cart-line-tools">
                     <Quantity
                       value={item.quantity}
                       onChange={(q) => onQuantity(item.key, q)}
                     />
                     <button type="button" onClick={() => onEdit(item)}>
-                      Изменить
+                      {t("cart.edit")}
                     </button>
                     <button
                       type="button"
-                      aria-label={"Удалить " + p.name}
+                      aria-label={t("cart.removeAria", { name: p.name })}
                       onClick={() => onRemove(item.key)}
                     >
-                      Удалить
+                      {t("cart.remove")}
                     </button>
                   </div>
                 </div>
@@ -108,14 +135,14 @@ export function CartDialog({
       {!!items.length && (
         <div className="cart-footer">
           <div>
-            <span>Итого</span>
-            <strong>{priceText(cartTotal(items))}</strong>
+            <span>{t("product.total")}</span>
+            <strong>{priceText(cartTotal(items), locale)}</strong>
           </div>
           <p className="muted small-copy">
-            Цены, наличие и доставку подтвердим в переписке.
+            {t("cart.confirmation")}
           </p>
           <button className="btn-primary" onClick={onOrder}>
-            Оформить заказ <Arrow />
+            {t("cart.checkout")} <Arrow />
           </button>
         </div>
       )}
@@ -129,34 +156,34 @@ export function OrderDialog({
   items: CartItem[];
   onClose: () => void;
 }) {
+  const { locale, t } = useI18n();
   const message = items.length
-    ? buildOrderMessage(items)
-    : "Здравствуйте! Хочу узнать о товарах ALGA Sport Shop.";
+    ? buildOrderMessage(items, locale)
+    : t("order.emptyMessage");
   const url = whatsappUrl(message);
   const [copyStatus, setCopyStatus] = useState("");
   async function copy() {
     try {
       await navigator.clipboard.writeText(message);
-      setCopyStatus("Текст скопирован");
+      setCopyStatus(t("order.copied"));
     } catch {
-      setCopyStatus("Выделите текст заказа и скопируйте его вручную.");
+      setCopyStatus(t("order.copyManual"));
     }
   }
   return (
-    <Dialog title="Ваш заказ готов к обсуждению" onClose={onClose}>
+    <Dialog title={t("order.title")} onClose={onClose}>
       <div className="order-body">
         <p className="muted">
           {url
-            ? "Проверьте детали и перейдите в WhatsApp. Сообщение отправите вы сами."
-            : "WhatsApp магазина пока не подключен. Можно скопировать заказ и отправить его в Instagram Direct."}
+            ? t("order.ready")
+            : t("order.offline")}
         </p>
         <label className="input-label">
-          Текст заказа
-          <textarea aria-label="Текст заказа" readOnly value={message} />
+          {t("order.text")}
+          <textarea aria-label={t("order.text")} readOnly value={message} />
         </label>
         <p className="small-copy muted">
-          Заказ еще не отправлен. Товары останутся в корзине до вашего
-          подтверждения и удаления.
+          {t("order.pending")}
         </p>
         <div className="order-buttons">
           {url ? (
@@ -166,15 +193,15 @@ export function OrderDialog({
               target="_blank"
               rel="noopener noreferrer"
             >
-              Открыть WhatsApp <Arrow />
+              {t("order.openWhatsapp")} <Arrow />
             </a>
           ) : (
             <button className="btn-primary" disabled>
-              WhatsApp пока не подключен
+              {t("order.whatsappOffline")}
             </button>
           )}
           <button className="btn-secondary" onClick={copy}>
-            Скопировать заказ
+            {t("order.copy")}
           </button>
           <a
             href={INSTAGRAM_URL}
@@ -182,7 +209,7 @@ export function OrderDialog({
             rel="noopener noreferrer"
             className="text-link"
           >
-            Написать в Instagram <Arrow />
+            {t("order.instagram")} <Arrow />
           </a>
         </div>
         <p role="status" className="small-copy">

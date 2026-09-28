@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, type ReactNode } from "react";
 import { asset } from "@/lib/shop-config";
+import { useI18n } from "@/lib/i18n/context";
 
 export function Arrow() {
   return (
@@ -42,6 +43,7 @@ export function Photo({
   className?: string;
   eager?: boolean;
 }) {
+  const { t } = useI18n();
   return src ? (
     <img
       src={asset(src)}
@@ -55,7 +57,7 @@ export function Photo({
   ) : (
     <div className={"photo-placeholder " + className}>
       <span aria-hidden="true">ALGA</span>
-      <small>Фотография уточняется</small>
+      <small>{t("common.photoPending")}</small>
     </div>
   );
 }
@@ -70,6 +72,7 @@ export function Dialog({
   onClose: () => void;
   wide?: boolean;
 }) {
+  const { t } = useI18n();
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
     const dialog = ref.current!;
@@ -112,7 +115,7 @@ export function Dialog({
         </div>
         <button
           className="icon-button"
-          aria-label="Закрыть"
+          aria-label={t("common.close")}
           onClick={onClose}
           type="button"
         >
@@ -130,20 +133,21 @@ export function Quantity({
   value: number;
   onChange: (n: number) => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="quantity">
       <button
         type="button"
-        aria-label="Уменьшить количество"
+        aria-label={t("common.decreaseQuantity")}
         disabled={value <= 1}
         onClick={() => onChange(value - 1)}
       >
         −
       </button>
-      <output aria-label="Количество">{value}</output>
+      <output aria-label={t("common.quantity")}>{value}</output>
       <button
         type="button"
-        aria-label="Увеличить количество"
+        aria-label={t("common.increaseQuantity")}
         disabled={value >= 99}
         onClick={() => onChange(value + 1)}
       >

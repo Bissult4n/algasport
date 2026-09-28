@@ -63,7 +63,9 @@ try {
       Object.fromEntries(
         [
           ".hero-product",
-          ".hero-product > .kimono-cutout",
+          ".hero-kimono-pair",
+          ".hero-kimono-white",
+          ".hero-kimono-blue",
           ".hero-caption",
           ".hero-copy",
           ".hero-sun",
@@ -84,22 +86,39 @@ try {
       ),
     );
     const stage = boxes[".hero-product"],
-      gi = boxes[".hero-product > .kimono-cutout"];
+      pair = boxes[".hero-kimono-pair"],
+      white = boxes[".hero-kimono-white"],
+      blue = boxes[".hero-kimono-blue"];
     assert.ok(
-      gi.left >= stage.left + 10 && gi.right <= stage.right - 10,
-      "Horizontal breathing room " + width,
+      pair.left >= stage.left && pair.right <= stage.right,
+      "Hero pair stays in its visual column " + width,
     );
     assert.ok(
-      gi.top >= stage.top + 28 && gi.bottom <= stage.bottom - 75,
-      "Full gi and caption breathing room " + width,
+      pair.top >= stage.top + 15 && pair.bottom <= stage.bottom - 50,
+      "Full pair and caption breathing room " + width,
+    );
+    assert.deepEqual(
+      await page.locator(".hero-kimono").evaluateAll((images) =>
+        images.map((image) => getComputedStyle(image).objectFit),
+      ),
+      ["contain", "contain"],
+      "Transparent PNGs remain unstretched " + width,
     );
     assert.ok(
-      Math.abs(gi.width / gi.height - 281 / 500) < 0.01,
-      "Unstretched silhouette " + width,
+      overlap(white, blue),
+      "White and blue uniforms form one composition " + width,
     );
     assert.ok(
-      !overlap(gi, boxes[".hero-caption"]) && !overlap(gi, boxes[".hero-copy"]),
-      "Text must not cover gi " + width,
+      !overlap(pair, boxes[".hero-caption"]) &&
+        !overlap(pair, boxes[".hero-copy"]),
+      "Text must not cover the uniform pair " + width,
+    );
+    assert.deepEqual(
+      await page.locator(".hero-kimono").evaluateAll((images) =>
+        images.map((image) => [image.naturalWidth, image.naturalHeight]),
+      ),
+      [[1500, 1500], [1500, 1500]],
+      "Both supplied PNGs must load at source resolution",
     );
     const sun = boxes[".hero-sun"];
     assert.ok(

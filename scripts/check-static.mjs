@@ -22,7 +22,7 @@ for (const asset of localAssets) {
   await access(join("out", path));
 }
 const sources = JSON.parse(await readFile("docs/image-sources.json", "utf8"));
-assert.equal(sources.length, 23);
+assert.equal(sources.length, 62);
 let bytes = 0;
 for (const source of sources) {
   const path = source.file.replace(/^public\//, "out/");
@@ -50,5 +50,5 @@ assert.ok(
   "Export must not contain API routes",
 );
 console.log(
-  `PASS: static export, ${localAssets.size} local asset references, 23 product photos (${Math.round(bytes / 1024)} KB), no legacy AI images or API routes. Base path: ${base || "/"}`,
+  `PASS: static export, ${localAssets.size} local asset references, 62 documented local images (${Math.round(bytes / 1024)} KB), no legacy AI images or API routes. Base path: ${base || "/"}`,
 );

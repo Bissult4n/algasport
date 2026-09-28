@@ -14,7 +14,7 @@ export const DELIVERY_TEXT = SHOP_TERMS.delivery || "Стоимость дост
 export const PAYMENT_TEXT = SHOP_TERMS.payment || "Способ оплаты согласуем при подтверждении заказа.";
 export const PRICE_ON_REQUEST = "Цена по запросу";
 export const CUSTOMIZATION_PRICES: Record<string, number | null> = {
-  backpatch: null,
+  backpatch: 16000,
   embroidery: null,
 };
 export const asset = (path: string) =>

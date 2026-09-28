@@ -1,12 +1,10 @@
 "use client";
 
-import {
-  comparisonRows,
-  zoneManufacturerSizes,
-  zoneModels,
-} from "@/lib/zone-comparison";
+import { zoneManufacturerSizes } from "@/lib/zone-comparison";
 import { getProduct } from "@/lib/catalog";
 import { priceText } from "@/lib/orders";
+import { useI18n } from "@/lib/i18n/context";
+import { comparisonRowsFor, localizedZoneModels } from "@/lib/i18n/zone";
 import { Arrow, Dialog } from "./shop-ui";
 
 export function ZoneComparison({
@@ -18,14 +16,17 @@ export function ZoneComparison({
   onChoose: (id: string) => void;
   onHelp: () => void;
 }) {
+  const { locale, t } = useI18n();
+  const zoneModels = localizedZoneModels(locale);
+  const comparisonRows = comparisonRowsFor(locale);
   return (
-    <Dialog title="Сравнить модели Zone" onClose={onClose} wide>
+    <Dialog title={t("compare.title")} onClose={onClose} wide>
       <div className="zone-comparison">
         <p className="comparison-intro">
-          Одна школа дзюдо. Три подхода к экипировке.
+          {t("compare.intro1")}
           <br />
           <span>
-            Сравниваем IJF-версии из официального каталога Mitsuboshi Global.
+            {t("compare.intro2")}
           </span>
         </p>
         <div className="comparison-models">
@@ -44,17 +45,15 @@ export function ZoneComparison({
                 ))}
                 <div>
                   <dt>IJF</dt>
-                  <dd>
-                    Одобрена по данным производителя для сравниваемой версии
-                  </dd>
+                  <dd>{t("compare.ijf")}</dd>
                 </div>
                 <div>
-                  <dt>Посадка</dt>
+                  <dt>{t("compare.fit")}</dt>
                   <dd>Regular (A) · Slim (Y) · Relax (B)</dd>
                 </div>
                 <div>
-                  <dt>Цена ALGA</dt>
-                  <dd>{priceText(getProduct(model.id)!.price)}</dd>
+                  <dt>{t("compare.price")}</dt>
+                  <dd>{priceText(getProduct(model.id)!.price, locale)}</dd>
                 </div>
               </dl>
               <button
@@ -62,18 +61,18 @@ export function ZoneComparison({
                 type="button"
                 onClick={() => onChoose(model.id)}
               >
-                Открыть {model.name} <Arrow />
+                {t("compare.open", { name: model.name })} <Arrow />
               </button>
             </article>
           ))}
         </div>
         <table className="comparison-table">
           <caption className="sr-only">
-            Характеристики Migaku, Idomu и Kiwami
+            {t("compare.caption")}
           </caption>
           <thead>
             <tr>
-              <th scope="col">Характеристика</th>
+              <th scope="col">{t("compare.characteristic")}</th>
               {zoneModels.map((model) => (
                 <th key={model.id} scope="col">
                   {model.name}
@@ -94,12 +93,12 @@ export function ZoneComparison({
               <th scope="row">IJF</th>
               {zoneModels.map((model) => (
                 <td key={model.id}>
-                  IJF Approved по данным производителя для этой версии
+                  {t("compare.ijfTable")}
                 </td>
               ))}
             </tr>
             <tr>
-              <th scope="row">Посадка</th>
+              <th scope="row">{t("compare.fit")}</th>
               {zoneModels.map((model) => (
                 <td key={model.id}>
                   Regular (A)
@@ -111,43 +110,35 @@ export function ZoneComparison({
               ))}
             </tr>
             <tr className="comparison-price">
-              <th scope="row">Цена ALGA</th>
+              <th scope="row">{t("compare.price")}</th>
               {zoneModels.map((model) => (
-                <td key={model.id}>{priceText(getProduct(model.id)!.price)}</td>
+                <td key={model.id}>{priceText(getProduct(model.id)!.price, locale)}</td>
               ))}
             </tr>
           </tbody>
         </table>
         <details className="comparison-sizing">
-          <summary>Посадка, размеры и версия комплекта</summary>
-          <p>
-            Для всех трёх моделей в каталоге производителя есть обычная посадка
-            Regular (A), узкая Slim (Y) и свободная Relax (B).
-          </p>
-          <p>Обозначения размеров производителя: {zoneManufacturerSizes}.</p>
-          <p>
-            Это варианты производителя, не остатки ALGA. Размер, посадку,
-            комплектацию брюк и маркировку конкретного изделия проверим перед
-            заказом. Обозначения не заменяют подбор по росту и весу.
-          </p>
+          <summary>{t("compare.sizingTitle")}</summary>
+          <p>{t("compare.sizing1")}</p>
+          <p>{t("compare.sizing2", { sizes: zoneManufacturerSizes })}</p>
+          <p>{t("compare.sizing3")}</p>
         </details>
         <section className="comparison-advice">
-          <h3>Какую выбрать?</h3>
+          <h3>{t("compare.adviceTitle")}</h3>
           <ul>
             {zoneModels.map((model) => (
               <li key={model.id}>{model.advice}</li>
             ))}
           </ul>
           <p>
-            Не уверены? Напишите нам рост, вес и задачи — поможем подобрать
-            модель и размер.
+            {t("compare.helpCopy")}
           </p>
           <button className="btn-secondary" type="button" onClick={onHelp}>
-            Помогите с выбором <Arrow />
+            {t("compare.help")} <Arrow />
           </button>
         </section>
         <div className="comparison-sources">
-          <span>Официальные источники:</span>
+          <span>{t("compare.sources")}</span>
           {zoneModels.map((model) => (
             <a
               key={model.id}

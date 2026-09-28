@@ -1,4 +1,14 @@
 export type Category = "kimono" | "vitamins" | "equipment";
+export type PriceRange = { min: number; max: number };
+export type Price = number | PriceRange | null;
+export type ProductSpecKey =
+  | "composition"
+  | "origin"
+  | "certification"
+  | "purpose"
+  | "feature"
+  | "model";
+export type ProductSpec = { key: ProductSpecKey; value: string };
 export type Product = {
   id: string;
   name: string;
@@ -6,13 +16,18 @@ export type Product = {
   category: Category;
   description: string;
   detail: string;
-  price: number | null;
+  price: Price;
   images: string[];
   variants: string[];
+  variantLabel?: string;
+  variantImages?: Record<string, string[]>;
+  variantSwatches?: Record<string, string>;
   availability?: string;
   badge?: string;
   featured?: boolean;
   source?: string;
+  specs?: ProductSpec[];
+  sizeField?: "belt";
 };
 export const categories: { id: Category; name: string; caption: string }[] = [
   { id: "kimono", name: "Кимоно", caption: "Для вашего пути в дзюдо" },
@@ -22,7 +37,7 @@ export const categories: { id: Category; name: string; caption: string }[] = [
 const kimono = {
   category: "kimono" as const,
   price: null,
-  variants: ["Уточнить цвет", "Белый", "Синий"],
+  variants: ["Цвет уточнить"],
   detail:
     "Размер, посадку и наличие уточним в переписке. Укажите ваш размер или рост в сантиметрах. Финальный макет персонализации согласуем перед изготовлением.",
 };
@@ -37,10 +52,30 @@ const zone = (
   name: "Zone " + name,
   brand: "ZONE / MITSUBOSHI",
   description,
-  images: Array.from(
-    { length: count },
-    (_, i) => "/images/kimono/zone-" + id + "-" + i + ".webp",
-  ),
+  images: [
+    "/images/products/zone/zone-" + id + "-white-main.webp",
+    ...Array.from({ length: count }, (_, i) =>
+      "/images/kimono/zone-" + id + "-" + i + ".webp"
+    ),
+  ],
+  variants: ["Белый", "Синий"],
+  variantSwatches: { Белый: "#f1f0eb", Синий: "#15529b" },
+  variantImages: {
+    Белый: [
+      "/images/products/zone/zone-" + id + "-white-main.webp",
+      "/images/kimono/zone-" + id + "-0.webp",
+      ...(id === "kiwami"
+        ? [
+            "/images/kimono/zone-kiwami-2.webp",
+            "/images/kimono/zone-kiwami-3.webp",
+          ]
+        : ["/images/kimono/zone-" + id + "-2.webp"]),
+    ],
+    Синий: [
+      "/images/products/zone/zone-" + id + "-blue-main.webp",
+      "/images/kimono/zone-" + id + "-1.webp",
+    ],
+  },
   source: "https://zone.mitsuboshi-global.com/products/" + id + "-ijf-uniform",
 });
 export const products: Product[] = [
@@ -53,13 +88,31 @@ export const products: Product[] = [
     ),
     badge: "Для тренировок",
     featured: true,
+    price: 85000,
+    specs: [
+      { key: "composition", value: "70% хлопок / 30% полиэстер" },
+      { key: "origin", value: "Пакистан" },
+      { key: "certification", value: "Сертифицировано IJF" },
+      { key: "purpose", value: "Тренировки и соревнования" },
+      { key: "feature", value: "Баланс цены и качества" },
+    ],
   },
-  zone(
-    "idomu",
-    "Idomu",
-    "Соревновательная модель Zone. Сочетание хлопка и полиэстера, продуманный крой.",
-    3,
-  ),
+  {
+    ...zone(
+      "idomu",
+      "Idomu",
+      "Соревновательная модель Zone. Сочетание хлопка и полиэстера, продуманный крой.",
+      3,
+    ),
+    price: 100000,
+    specs: [
+      { key: "composition", value: "70% хлопок / 30% полиэстер" },
+      { key: "origin", value: "Пакистан" },
+      { key: "certification", value: "Сертифицировано IJF" },
+      { key: "purpose", value: "Интенсивные тренировки и соревнования" },
+      { key: "feature", value: "Плотное и долговечное исполнение" },
+    ],
+  },
   {
     ...zone(
       "kiwami",
@@ -69,6 +122,14 @@ export const products: Product[] = [
     ),
     badge: "Made in Japan",
     featured: true,
+    price: 140000,
+    specs: [
+      { key: "composition", value: "77% хлопок / 23% полиэстер" },
+      { key: "origin", value: "Япония" },
+      { key: "certification", value: "Сертифицировано IJF" },
+      { key: "purpose", value: "Соревнования / продвинутые дзюдоисты" },
+      { key: "feature", value: "Облегчённая конструкция, standing collar" },
+    ],
   },
   {
     ...kimono,
@@ -80,11 +141,19 @@ export const products: Product[] = [
     description:
       "Champion III с зеленой маркировкой IJF. Green обозначает этикетку, а не цвет ткани.",
     images: [
-      "/images/kimono/adidas-green-0.webp",
-      "/images/kimono/adidas-green-1.webp",
+      "/images/products/adidas/champion-iii-green/main.png",
+      "/images/products/adidas/champion-iii-green/front.png",
+      "/images/products/adidas/champion-iii-green/back.png",
     ],
     source:
       "https://imssport.pl/pl/p/Judoga-Adidas-Champion-III-2-IJF-GREEN-LABEL/986",
+    variants: ["Цвет по фото / уточнить"],
+    specs: [
+      { key: "model", value: "Champion III Green" },
+      { key: "certification", value: "Маркировка IJF Green Label" },
+      { key: "purpose", value: "Дзюдо" },
+      { key: "feature", value: "Green обозначает маркировку, не цвет ткани" },
+    ],
   },
   {
     ...kimono,
@@ -94,9 +163,20 @@ export const products: Product[] = [
     badge: "Gold details",
     description:
       "Модель Champion III с золотыми полосами. На фото белый вариант White / Gold.",
-    images: [0, 1, 2].map((i) => "/images/kimono/adidas-gold-" + i + ".webp"),
+    images: [
+      "/images/products/adidas/champion-iii-gold/main.png",
+      "/images/products/adidas/champion-iii-gold/shoulder-detail.png",
+      "/images/products/adidas/champion-iii-gold/ijf-label-detail.png",
+      "/images/products/adidas/champion-iii-gold/pants-logo-detail.png",
+    ],
     source:
       "https://www.roninwear.com/en/adidas-champion-iii-ijf-judogi-white-gold-p-22047.html",
+    variants: ["Белый / золотые детали"],
+    specs: [
+      { key: "model", value: "Champion III Gold" },
+      { key: "purpose", value: "Дзюдо" },
+      { key: "feature", value: "Белая версия с золотыми полосами" },
+    ],
   },
   {
     ...kimono,
@@ -106,9 +186,23 @@ export const products: Product[] = [
     badge: "Red Label",
     description:
       "Champion III с красной маркировкой IJF. Red обозначает этикетку, а не цвет кимоно.",
-    images: ["/images/kimono/adidas-red-0.webp"],
+    images: [
+      "/images/products/adidas/champion-iii-red/main.png",
+      "/images/products/adidas/champion-iii-red/angle.png",
+      "/images/products/adidas/champion-iii-red/back.png",
+      "/images/products/adidas/champion-iii-red/jacket-detail.png",
+      "/images/products/adidas/champion-iii-red/folded-set.png",
+      "/images/products/adidas/champion-iii-red/shoulder-detail.png",
+    ],
     source:
       "https://gi-obi.com/urun/adidas-champion-iii-red-ijf-onayli-judo-gi/",
+    variants: ["Цвет по фото / уточнить"],
+    specs: [
+      { key: "model", value: "Champion III Red" },
+      { key: "certification", value: "Маркировка IJF Red Label" },
+      { key: "purpose", value: "Дзюдо" },
+      { key: "feature", value: "Red обозначает маркировку, не цвет ткани" },
+    ],
   },
   {
     ...kimono,
@@ -118,12 +212,57 @@ export const products: Product[] = [
     description:
       "Классическая модель Champion II с усиленными швами. Куртка и брюки для дзюдо.",
     images: [
-      "/images/kimono/adidas-ii-0.webp",
-      "/images/kimono/adidas-ii-back.webp",
-      "/images/kimono/adidas-ii-detail.webp",
+      "/images/products/adidas/champion-ii/white.png",
     ],
+    variantImages: {
+      Белый: ["/images/products/adidas/champion-ii/white.png"],
+      Синий: ["/images/products/adidas/champion-ii/blue.png"],
+    },
+    variantSwatches: { Белый: "#f1f0eb", Синий: "#15529b" },
     source:
       "https://imssport.pl/pl/p/Judoga-Adidas-Champion-II-IJF-APPROVED/343",
+    variants: ["Белый", "Синий"],
+    specs: [
+      { key: "model", value: "Champion II" },
+      { key: "purpose", value: "Дзюдо" },
+      { key: "feature", value: "Куртка и брюки, усиленные швы" },
+    ],
+  },
+  {
+    ...kimono,
+    id: "mizuno-white",
+    name: "Mizuno — белое кимоно",
+    brand: "Mizuno",
+    description:
+      "Белое кимоно Mizuno для дзюдо. Принадлежность к модели Yusho Japan и IJF-статус требуют подтверждения.",
+    detail:
+      "Точное название модели, IJF-статус, размерная сетка и наличие требуют подтверждения. Укажите рост и вес — поможем подобрать размер после уточнения данных.",
+    images: ["/images/products/mizuno/mizuno-white.png"],
+    variants: ["Белый"],
+    availability: "Наличие уточняется при заказе.",
+    specs: [
+      { key: "model", value: "Модель уточняется" },
+      { key: "certification", value: "IJF-статус уточняется" },
+      { key: "purpose", value: "Дзюдо" },
+    ],
+  },
+  {
+    ...kimono,
+    id: "mizuno-blue",
+    name: "Mizuno — синее кимоно",
+    brand: "Mizuno",
+    description:
+      "Синее кимоно Mizuno для дзюдо. Принадлежность к модели Yusho или Yusho Best и IJF-статус требуют подтверждения.",
+    detail:
+      "Точное название модели, IJF-статус, размерная сетка и наличие требуют подтверждения. Укажите рост и вес — поможем подобрать размер после уточнения данных.",
+    images: ["/images/products/mizuno/mizuno-blue.png"],
+    variants: ["Синий"],
+    availability: "Наличие уточняется при заказе.",
+    specs: [
+      { key: "model", value: "Модель уточняется" },
+      { key: "certification", value: "IJF-статус уточняется" },
+      { key: "purpose", value: "Дзюдо" },
+    ],
   },
   ...[
     [
@@ -161,7 +300,10 @@ export const products: Product[] = [
       brand: "FITLINE",
       category: "vitamins",
       price: null,
-      images: ["/images/fitline/" + id + ".webp"],
+      images: [
+        "/images/products/fitline/fitline-" + id + "-main.webp",
+        "/images/fitline/" + id + ".webp",
+      ],
       variants: [variant],
       description,
       detail:
@@ -176,15 +318,57 @@ export const products: Product[] = [
     brand: "TRAINING EQUIPMENT",
     category: "equipment",
     price: null,
-    images: [],
-    variants: ["Уточнить вариант"],
+    images: [
+      "/images/products/equipment/korean-band/main.png",
+      "/images/products/equipment/korean-band/rolled.png",
+      "/images/products/equipment/korean-band/folded.png",
+    ],
+    variants: ["5 см × 200 см", "3 см × 200 см"],
+    variantLabel: "Ширина",
     badge: "Снаряжение",
     description:
-      "Тренировочный жгут для работы над техникой. Длину и сопротивление уточним при заказе.",
+      "Тренировочный жгут длиной 200 см для работы над техникой. Доступен в двух вариантах ширины.",
     detail:
-      "Точная модель и фотография ожидают подтверждения магазина. Поможем подобрать подходящий вариант.",
+      "Доступны две ширины: 5 см и 3 см при одинаковой длине 200 см. Выберите подходящий вариант для ваших предпочтений и тренировочных задач.",
+  },
+  {
+    id: "mizuno-black-belt",
+    name: "Mizuno Black Belt",
+    brand: "Mizuno",
+    category: "equipment",
+    price: 25000,
+    images: ["/images/products/equipment/black-belts/mizuno-black-belt.png"],
+    variants: ["Черный"],
+    variantLabel: "Цвет",
+    variantSwatches: { Черный: "#151617" },
+    sizeField: "belt",
+    badge: "Black Belt",
+    description: "Чёрный пояс Mizuno для дзюдо. Размер подбирается индивидуально.",
+    detail:
+      "Точная модель, ширина и IJF-статус не подтверждены. Размер уточним при заказе.",
+  },
+  {
+    id: "sakura-black-belt",
+    name: "Sakura Black Belt",
+    brand: "Sakura",
+    category: "equipment",
+    price: { min: 25000, max: 30000 },
+    images: ["/images/products/equipment/black-belts/sakura-black-belt.png"],
+    variants: ["Черный"],
+    variantLabel: "Цвет",
+    variantSwatches: { Черный: "#151617" },
+    sizeField: "belt",
+    badge: "Black Belt",
+    description:
+      "Чёрный пояс для дзюдо. Итоговая стоимость зависит от выбранного размера/варианта.",
+    detail:
+      "Точное официальное название модели, ширина и IJF-статус не подтверждены. Размер и итоговую стоимость уточним при заказе.",
   },
 ];
 export const getProduct = (id: string) => products.find((p) => p.id === id);
+export const productImages = (product: Product, variant?: string) =>
+  (variant && product.variantImages?.[variant]) || product.images;
 export const categoryName = (id: Category) =>
   categories.find((c) => c.id === id)!.name;
+export const productHasSize = (product: Product) =>
+  product.category === "kimono" || product.sizeField === "belt";

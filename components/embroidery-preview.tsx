@@ -8,6 +8,7 @@ import {
   placementText,
   type Embroidery,
 } from "@/lib/customization";
+import { useI18n } from "@/lib/i18n/context";
 
 const japanese = localFont({
   src: "../assets/fonts/noto-sans-jp-600.woff2",
@@ -21,7 +22,7 @@ const scenes = {
   Куртка: {
     file: "jacket.webp",
     background: "#c1d0e3",
-    photo: "Zone Kiwami, вид спереди",
+    photoKey: "preview.jacketPhoto",
     x: 181,
     y: 197,
     angle: 3,
@@ -33,7 +34,7 @@ const scenes = {
   Штаны: {
     file: "pants.webp",
     background: "#ffffff",
-    photo: "Adidas JT275, вид спереди",
+    photoKey: "preview.pantsPhoto",
     x: 165,
     y: 99,
     angle: -3,
@@ -45,7 +46,7 @@ const scenes = {
   Пояс: {
     file: "belt.webp",
     background: "#f3f3f3",
-    photo: "Outshock, чёрный пояс",
+    photoKey: "preview.beltPhoto",
     x: 117,
     y: 286,
     angle: -30,
@@ -59,7 +60,7 @@ const scenes = {
   {
     file: string;
     background: string;
-    photo: string;
+    photoKey: "preview.jacketPhoto" | "preview.pantsPhoto" | "preview.beltPhoto";
     x: number;
     y: number;
     angle: number;
@@ -71,6 +72,7 @@ const scenes = {
 >;
 
 export function EmbroideryPreview({ value }: { value: Embroidery }) {
+  const { locale, t } = useI18n();
   const uid = useId().replaceAll(":", "");
   const id = (name: string) => uid + name;
   const scene = scenes[value.placement];
@@ -96,7 +98,7 @@ export function EmbroideryPreview({ value }: { value: Embroidery }) {
   return (
     <figure className="patch-preview embroidery-preview">
       <div className="preview-label">
-        <span className="live-dot" /> LIVE PREVIEW <span>ИМЕННАЯ ВЫШИВКА</span>
+        <span className="live-dot" /> {t("preview.live")} <span>{t("preview.namedEmbroidery")}</span>
       </div>
       <svg
         key={value.placement}
@@ -104,7 +106,7 @@ export function EmbroideryPreview({ value }: { value: Embroidery }) {
         style={{ background: scene.background }}
         viewBox="0 0 400 400"
         role="img"
-        aria-label={"Макет вышивки: " + text + ". " + placementText(value)}
+        aria-label={t("preview.embroideryAria", { text, placement: placementText(value, locale) })}
       >
         <defs>
           <filter
@@ -191,11 +193,11 @@ export function EmbroideryPreview({ value }: { value: Embroidery }) {
           <use href={"#" + id("letters")} fill={"url(#" + id("thread-light") + ")"} />
         </g>
       </svg>
-      <div className="preview-placement">{placementText(value)}</div>
+      <div className="preview-placement">{placementText(value, locale)}</div>
       <figcaption>
-        <strong>Пример расположения вышивки</strong>
+        <strong>{t("preview.example")}</strong>
         <br />
-        {scene.photo}. Размер надписи и место согласуем для вашего изделия.
+        {t("preview.photoNote", { photo: t(scene.photoKey) })}
       </figcaption>
     </figure>
   );

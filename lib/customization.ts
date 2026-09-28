@@ -38,12 +38,32 @@ export const defaultEmbroidery = (): Embroidery => ({
   font: "Modern",
   orientation: "vertical",
 });
-export const placementText = (c: Embroidery) =>
-  c.placement === "Куртка"
-    ? "Куртка / нижняя часть"
+export const placementText = (c: Embroidery, locale: Locale = "ru") => {
+  const [placement, hint] = c.placement === "Куртка"
+    ? [translate(locale, "custom.jacket"), translate(locale, "custom.jacketHint")]
     : c.placement === "Штаны"
-      ? "Штаны / верхняя часть штанины"
-      : "Пояс / возле одного из концов";
+      ? [translate(locale, "custom.pants"), translate(locale, "custom.pantsHint")]
+      : [translate(locale, "custom.belt"), translate(locale, "custom.beltHint")];
+  return placement + " / " + hint.charAt(0).toLocaleLowerCase(locale) + hint.slice(1);
+};
+
+export const embroideryColorText = (
+  color: Embroidery["color"],
+  locale: Locale = "ru",
+) => {
+  const keys = {
+    Синий: "custom.blue",
+    Красный: "custom.red",
+    Черный: "custom.black",
+    Золотой: "custom.gold",
+  } satisfies Record<Embroidery["color"], TranslationKey>;
+  return translate(locale, keys[color]);
+};
+
+export const orientationText = (
+  orientation: Embroidery["orientation"],
+  locale: Locale = "ru",
+) => translate(locale, orientation === "vertical" ? "custom.vertical" : "custom.horizontal");
 
 export function parseCustomization(raw: unknown): Customization | null {
   if (!raw || typeof raw !== "object") return null;
@@ -104,3 +124,5 @@ export function parseCustomization(raw: unknown): Customization | null {
     ...(legacyNote ? { legacyNote } : {}),
   };
 }
+import { translate, type Locale } from "./i18n";
+import type { TranslationKey } from "./i18n/ru";

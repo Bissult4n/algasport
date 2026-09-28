@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import {
   categories,
-  categoryName,
   getProduct,
+  productImages,
   products,
   type Category,
   type Product,
@@ -17,13 +17,21 @@ import {
   whatsappUrl,
   type CartItem,
 } from "@/lib/orders";
-import { INSTAGRAM_URL, INSTAGRAM_USERNAME, SHOP_TERMS, DELIVERY_TEXT, PAYMENT_TEXT } from "@/lib/shop-config";
+import { INSTAGRAM_URL, INSTAGRAM_USERNAME } from "@/lib/shop-config";
 import { Arrow, BagIcon, BrandMark, Photo } from "./shop-ui";
 import { ProductDialog } from "./product-dialog";
 import { CartDialog, OrderDialog } from "./cart-dialog";
 import { KimonoPhoto } from "./kimono-photo";
 import { OwnersSection } from "./owners-section";
 import { ZoneComparison } from "./zone-comparison";
+import { useI18n } from "@/lib/i18n/context";
+import {
+  localizedCategory,
+  localizedProduct,
+  localizedVariant,
+} from "@/lib/i18n/catalog";
+import { localeLabels, type Locale } from "@/lib/i18n";
+import { ProductFacts } from "./product-facts";
 
 type View =
   | { type: "product"; id: string; initial?: CartItem }
@@ -38,20 +46,24 @@ function ProductCard({
   onAdd,
 }: {
   product: Product;
-  onOpen: () => void;
-  onAdd: () => void;
+  onOpen: (variant: string) => void;
+  onAdd: (variant: string) => void;
 }) {
+  const { locale, t } = useI18n();
+  const [variant, setVariant] = useState(product.variants[0]);
+  const images = productImages(product, variant);
+  const copy = localizedProduct(product, locale);
   return (
     <article className="catalog-card">
       <button
         type="button"
         className="catalog-photo"
-        onClick={onOpen}
-        aria-label={"Открыть " + product.name}
+        onClick={() => onOpen(variant)}
+        aria-label={t("product.open", { name: copy.name })}
       >
-        <Photo src={product.images[0]} alt={product.name} />
-        {product.badge && (
-          <span className="product-badge">{product.badge}</span>
+        <Photo src={images[0]} alt={copy.name + ", " + localizedVariant(variant, locale)} />
+        {copy.badge && (
+          <span className="product-badge">{copy.badge}</span>
         )}
         <span className="photo-arrow">
           <Arrow />
@@ -60,29 +72,51 @@ function ProductCard({
       <div className="catalog-card-copy">
         <div className="product-meta">
           <p className="product-brand">{product.brand}</p>
-          <span>{categoryName(product.category)}</span>
+          <span>{localizedCategory(product.category, locale).name}</span>
         </div>
         <h3>
-          <button type="button" onClick={onOpen}>
-            {product.name}
+          <button type="button" onClick={() => onOpen(variant)}>
+            {copy.name}
           </button>
         </h3>
-        <p className="product-description">{product.description}</p>
+        <p className="product-description">{copy.description}</p>
+        <ProductFacts specs={copy.specs} compact />
         <p className="product-stock">
-          {product.availability || (product.category === "kimono"
-            ? SHOP_TERMS.kimonoAvailability
-            : SHOP_TERMS.availability)}
+          {copy.availability || (product.category === "kimono"
+            ? t("common.kimonoAvailability")
+            : t("common.availability"))}
         </p>
+        {product.variantSwatches && product.variants.length > 1 && (
+          <div className="card-color-picker" aria-label={t("product.colorChoice")}>
+            {product.variants.map((name) => (
+              <button
+                type="button"
+                key={name}
+                className={name === variant ? "active" : ""}
+                aria-label={t("product.color", { value: localizedVariant(name, locale) })}
+                aria-pressed={name === variant}
+                onClick={() => setVariant(name)}
+              >
+                <span
+                  className="color-swatch"
+                  style={{ background: product.variantSwatches?.[name] }}
+                  aria-hidden="true"
+                />
+                {localizedVariant(name, locale)}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="product-price">
-          <span>{priceText(product.price)}</span>
-          <small>Уточним в переписке</small>
+          <span>{priceText(product.price, locale)}</span>
+          <small>{t("product.confirmInChat")}</small>
         </div>
         <div className="card-actions">
-          <button className="btn-primary" onClick={onOpen}>
-            Оформить <Arrow />
+          <button className="btn-primary" onClick={() => onOpen(variant)}>
+            {t("product.order")} <Arrow />
           </button>
-          <button className="btn-secondary" onClick={onAdd}>
-            Добавить в корзину
+          <button className="btn-secondary" onClick={() => onAdd(variant)}>
+            {t("product.add")}
           </button>
         </div>
       </div>
@@ -91,6 +125,7 @@ function ProductCard({
 }
 
 export function Storefront() {
+  const { locale, setLocale, t } = useI18n();
   const [category, setCategory] = useState<Category | "all">("all");
   const [query, setQuery] = useState("");
   const [view, setView] = useState<View>(null);
@@ -156,11 +191,11 @@ export function Storefront() {
       });
     const existing = cart.find(v => identity(v) === identity(item));
     if (cart.length >= 50 && !item.key && !existing) {
-      setNotice("В корзине уже 50 позиций. Оформите их отдельным заказом.");
+      setNotice(t("product.cartLimit"));
       return;
     }
     if (!item.key && existing && existing.quantity + item.quantity > 99) {
-      setNotice("Максимум 99 единиц в одной позиции. Измените количество в корзине.");
+      setNotice(t("product.quantityLimit"));
       return;
     }
     setCart((current) => {
@@ -185,8 +220,10 @@ export function Storefront() {
     });
     setNotice(
       item.key
-        ? "Параметры товара сохранены"
-        : getProduct(item.productId)!.name + " добавлен в корзину",
+        ? t("product.saved")
+        : t("product.added", {
+            name: localizedProduct(getProduct(item.productId)!, locale).name,
+          }),
     );
     close();
   }
@@ -198,7 +235,18 @@ export function Storefront() {
   const filtered = products.filter(
     (p) =>
       (category === "all" || p.category === category) &&
-      (p.name + " " + categoryName(p.category))
+      (() => {
+        const copy = localizedProduct(p, locale);
+        return [
+        copy.name,
+        p.brand,
+        copy.description,
+        copy.detail,
+        ...(copy.specs?.map((spec) => spec.value) || []),
+        localizedCategory(p.category, locale).name,
+      ];
+      })()
+        .join(" ")
         .toLowerCase()
         .includes(query.trim().toLowerCase()),
   );
@@ -207,18 +255,18 @@ export function Storefront() {
     <ProductCard
       key={p.id}
       product={p}
-      onOpen={() => openProduct(p)}
-      onAdd={() => add(newItem(p.id))}
+      onOpen={(variant) => openProduct(p, newItem(p.id, variant))}
+      onAdd={(variant) => add(newItem(p.id, variant))}
     />
   );
 
   return (
     <div className="theme-root static-shop">
       <a className="skip-link" href="#catalog">
-        Перейти к каталогу
+        {t("nav.catalog")}
       </a>
       <div className="announcement">
-        ALGA SPORT SHOP <span>Экипировка. Характер. Движение вперед.</span>
+        ALGA SPORT SHOP <span>{t("announcement")}</span>
       </div>
       <header className="shop-header">
         <div className="container-frame">
@@ -228,11 +276,11 @@ export function Storefront() {
               ALGA<small>SPORT SHOP</small>
             </span>
           </a>
-          <nav aria-label="Основная навигация">
-            <a href="#catalog">Каталог</a>
-            <a href="#atelier">Кастомизация</a>
-            <a href="#about">О магазине</a>
-            <a href="#contacts">Контакты</a>
+          <nav aria-label={t("nav.main")}>
+            <a href="#catalog">{t("nav.catalog")}</a>
+            <a href="#atelier">{t("nav.customization")}</a>
+            <a href="#about">{t("nav.about")}</a>
+            <a href="#contacts">{t("nav.contacts")}</a>
           </nav>
           <div className="header-actions">
             <a
@@ -243,13 +291,26 @@ export function Storefront() {
             >
               Instagram <Arrow />
             </a>
+            <div className="language-switcher" role="group" aria-label={t("language.label")}>
+              {(Object.keys(localeLabels) as Locale[]).map((option) => (
+                <button
+                  type="button"
+                  key={option}
+                  className={locale === option ? "active" : ""}
+                  aria-pressed={locale === option}
+                  onClick={() => setLocale(option)}
+                >
+                  {localeLabels[option]}
+                </button>
+              ))}
+            </div>
             <button
               className="cart-button"
               onClick={() => setView({ type: "cart" })}
-              aria-label={"Корзина, товаров: " + count}
+              aria-label={t("header.cartAria", { count })}
             >
               <BagIcon />
-              <span>Корзина</span>
+              <span>{t("header.cart")}</span>
               <b>{count}</b>
             </button>
           </div>
@@ -260,33 +321,33 @@ export function Storefront() {
           <div className="container-frame hero-grid">
             <div className="hero-copy">
               <p className="label">
-                <span className="red-dot" /> JUDO CULTURE / KAZAKHSTAN
+                <span className="red-dot" /> {t("hero.eyebrow")}
               </p>
               <h1>
-                СИЛА
-                <br />В КАЖДОЙ
+                {t("hero.title1")}
+                <br />{t("hero.title2")}
                 <br />
-                <span>ДЕТАЛИ.</span>
+                <span>{t("hero.title3")}</span>
               </h1>
               <p>
-                Кимоно для вашего пути в дзюдо.
+                {t("hero.copy1")}
                 <br />
-                Поможем с моделью, размером и персональной вышивкой.
+                {t("hero.copy2")}
               </p>
               <div className="hero-actions">
                 <a href="#catalog" className="btn-primary">
-                  Выбрать экипировку <Arrow />
+                  {t("hero.choose")} <Arrow />
                 </a>
                 <a href="#atelier" className="text-link">
-                  Сделать своим <Arrow />
+                  {t("hero.personalize")} <Arrow />
                 </a>
               </div>
               <div className="hero-footnote">
                 <span>
-                  <b>Подбор по модели</b>Размер и посадка
+                  <b>{t("hero.fitTitle")}</b>{t("hero.fitCopy")}
                 </span>
                 <span>
-                  <b>Персонализация</b>Нашивка и вышивка
+                  <b>{t("hero.customTitle")}</b>{t("hero.customCopy")}
                 </span>
               </div>
             </div>
@@ -295,33 +356,32 @@ export function Storefront() {
               <span className="hero-kanji" aria-hidden="true">
                 柔<br />道
               </span>
-              <KimonoPhoto />
-              <button
-                className="hero-detail"
-                onClick={() => openProduct(getProduct("adidas-champion-ii")!)}
-                aria-label="Рассмотреть детали Adidas Champion II"
-              >
+              <div className="hero-kimono-pair">
                 <Photo
-                  src="/images/kimono/adidas-ii-detail.webp"
-                  alt="Фактура ткани Adidas Champion II"
+                  src="/images/hero/zone-blue.png"
+                  alt={t("hero.blueAlt")}
+                  className="hero-kimono hero-kimono-blue"
+                  eager
                 />
-                <span>
-                  Внимание
-                  <br />к деталям <Arrow />
-                </span>
-              </button>
+                <Photo
+                  src="/images/hero/zone-white.png"
+                  alt={t("hero.whiteAlt")}
+                  className="hero-kimono hero-kimono-white"
+                  eager
+                />
+              </div>
               <span className="hero-caption">
-                ADIDAS CHAMPION II
+                ZONE JUDOGI / WHITE + BLUE
                 <br />
-                <small>Дисциплина начинается с выбора.</small>
+                <small>{t("hero.caption")}</small>
               </span>
-              <button
+              <a
                 className="hero-product-link"
-                onClick={() => openProduct(getProduct("adidas-champion-ii")!)}
-                aria-label="Открыть Adidas Champion II"
+                href="#catalog"
+                aria-label={t("hero.catalogAria")}
               >
                 <Arrow />
-              </button>
+              </a>
             </div>
           </div>
         </section>
@@ -345,7 +405,7 @@ export function Storefront() {
 
         <section
           className="container-frame category-section"
-          aria-label="Категории товаров"
+          aria-label={t("category.aria")}
         >
           {categories.map((c, i) => (
             <button
@@ -355,8 +415,8 @@ export function Storefront() {
             >
               <span className="category-number">0{i + 1}</span>
               <div>
-                <h2>{c.name}</h2>
-                <p>{c.caption}</p>
+                <h2>{localizedCategory(c.id, locale).name}</h2>
+                <p>{localizedCategory(c.id, locale).caption}</p>
               </div>
               <Arrow />
             </button>
@@ -366,29 +426,31 @@ export function Storefront() {
         <section id="catalog" className="container-frame catalog-section">
           <div className="section-heading">
             <div>
-              <p className="label">КАТАЛОГ / ALGA SPORT SHOP</p>
-              <h2>Для работы на татами.</h2>
+              <p className="label">{t("catalog.eyebrow")}</p>
+              <h2>{t("catalog.title")}</h2>
             </div>
             <p>
-              Сравните модели и выберите параметры.
+              {t("catalog.intro1")}
               <br />
-              Цену и наличие подтвердим лично.
+              {t("catalog.intro2")}
             </p>
           </div>
           <div className="catalog-toolbar">
             <div
               className="category-tabs"
               role="group"
-              aria-label="Фильтр категории"
+              aria-label={t("catalog.filterAria")}
             >
-              {[{ id: "all", name: "Все товары" }, ...categories].map((c) => (
+              {[{ id: "all" as const }, ...categories].map((c) => (
                 <button
                   key={c.id}
                   aria-pressed={category === c.id}
                   className={category === c.id ? "active" : ""}
                   onClick={() => setCategory(c.id as Category | "all")}
                 >
-                  {c.name}
+                  {c.id === "all"
+                    ? t("category.all")
+                    : localizedCategory(c.id, locale).name}
                   <span>
                     {c.id === "all"
                       ? products.length
@@ -404,8 +466,8 @@ export function Storefront() {
               </svg>
               <input
                 type="search"
-                placeholder="Найти товар"
-                aria-label="Найти товар"
+                placeholder={t("catalog.search")}
+                aria-label={t("catalog.search")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
               />
@@ -413,19 +475,18 @@ export function Storefront() {
           </div>
           {(category === "all" || category === "kimono") && (
             <div className="comparison-entry">
-              <p><strong>ZONE / MITSUBOSHI</strong> Не знаете, какую модель выбрать?</p>
-              <button className="btn-secondary" onClick={() => setView({ type: "compare" })}>Сравнить модели <Arrow /></button>
+              <p><strong>ZONE / MITSUBOSHI</strong> {t("catalog.comparePrompt")}</p>
+              <button className="btn-secondary" onClick={() => setView({ type: "compare" })}>{t("catalog.compare")} <Arrow /></button>
             </div>
           )}
           <p className="catalog-note">
-            Цены по запросу · Размеры, варианты и наличие подтверждаем в
-            переписке
+            {t("catalog.note")}
           </p>
           <div className="catalog-grid">{filtered.map(renderCard)}</div>
           {!filtered.length && (
             <div className="no-results">
-              <h3>Ничего не нашлось</h3>
-              <p>Попробуйте другое название или категорию.</p>
+              <h3>{t("catalog.emptyTitle")}</h3>
+              <p>{t("catalog.emptyCopy")}</p>
               <button
                 className="btn-secondary"
                 onClick={() => {
@@ -433,7 +494,7 @@ export function Storefront() {
                   setCategory("all");
                 }}
               >
-                Показать все товары
+                {t("catalog.showAll")}
               </button>
             </div>
           )}
@@ -441,7 +502,7 @@ export function Storefront() {
 
         <aside
           className="size-help container-frame"
-          aria-label="Помощь с размером"
+          aria-label={t("sizeHelp.aria")}
         >
           <div className="size-help-inner">
             <span className="size-symbol" aria-hidden="true">
@@ -451,14 +512,11 @@ export function Storefront() {
               </svg>
             </span>
             <div>
-              <h2>Не уверены в размере?</h2>
-              <p>
-                Укажите рост и вес в поле размера выбранной модели. Поможем
-                подобрать размер и посадку именно этого кимоно.
-              </p>
+              <h2>{t("sizeHelp.title")}</h2>
+              <p>{t("sizeHelp.copy")}</p>
             </div>
             <a className="text-link" href="#catalog">
-              Выбрать модель <Arrow />
+              {t("sizeHelp.action")} <Arrow />
             </a>
           </div>
         </aside>
@@ -475,28 +533,23 @@ export function Storefront() {
             <p>ALGA ATELIER / PERSONALIZATION</p>
           </div>
           <div className="atelier-copy">
-            <p className="label">ПЕРСОНАЛИЗАЦИЯ / ALGA ATELIER</p>
+            <p className="label">{t("atelier.eyebrow")}</p>
             <h2>
-              Ваша фамилия.
+              {t("atelier.title1")}
               <br />
-              <em>На вашем кимоно.</em>
+              <em>{t("atelier.title2")}</em>
             </h2>
-            <p>
-              Именная нашивка на спине или компактная вышивка на куртке и
-              штанах. Это два разных способа персонализации: у каждого свои
-              настройки и предварительный макет.
-            </p>
+            <p>{t("atelier.copy")}</p>
             <div className="atelier-options">
               <span>
-                <b>01 / IJF backpatch</b>Фамилия и код страны
+                <b>01 / IJF backpatch</b>{t("atelier.backpatch")}
               </span>
               <span>
-                <b>02 / Вышивка</b>Текст, цвет и место
+                <b>02 / {t("custom.embroidery")}</b>{t("atelier.embroidery")}
               </span>
             </div>
             <p className="small-copy muted">
-              Финальный макет и требования к соревнованиям согласуем перед
-              изготовлением.
+              {t("atelier.note")}
             </p>
             <button
               className="btn-primary"
@@ -506,7 +559,7 @@ export function Storefront() {
                 openProduct(getProduct(item.productId)!, item);
               }}
             >
-              Создать свою нашивку <Arrow />
+              {t("atelier.action")} <Arrow />
             </button>
           </div>
         </section>
@@ -514,11 +567,11 @@ export function Storefront() {
         <section className="container-frame featured-section">
           <div className="section-heading">
             <div>
-              <p className="label">ЗНАКОМСТВО С КОЛЛЕКЦИЕЙ</p>
-              <h2>Начните с этих моделей.</h2>
+              <p className="label">{t("featured.eyebrow")}</p>
+              <h2>{t("featured.title")}</h2>
             </div>
             <a href="#catalog" className="text-link">
-              Весь каталог <Arrow />
+              {t("featured.all")} <Arrow />
             </a>
           </div>
           <div className="catalog-grid featured-grid">
@@ -528,46 +581,43 @@ export function Storefront() {
 
         <section id="about" className="about-section container-frame">
           <div>
-            <p className="label">О МАГАЗИНЕ</p>
+            <p className="label">{t("about.eyebrow")}</p>
             <h2>
-              ALGA значит
+              {t("about.title1")}
               <br />
-              <span>вперед.</span>
+              <span>{t("about.title2")}</span>
             </h2>
             <p className="about-caption">
-              Кимоно выбирают не только по размеру на этикетке.
+              {t("about.caption")}
             </p>
           </div>
           <div>
             <p className="about-intro">
-              От выбора модели до согласования нашивки.
+              {t("about.intro")}
             </p>
             <p className="muted">
-              Расскажите, для чего подбираете кимоно: для тренировок или
-              соревнований. Укажите рост, вес и пожелания к посадке. Обсудим
-              конкретную модель, а для персонализации отдельно проверим текст и
-              размещение.
+              {t("about.copy")}
             </p>
             <div className="order-steps">
               <div>
                 <b>01</b>
                 <p>
-                  Выберите модель
-                  <small>Сравните фото и добавьте нужные параметры</small>
+                  {t("about.step1")}
+                  <small>{t("about.step1copy")}</small>
                 </p>
               </div>
               <div>
                 <b>02</b>
                 <p>
-                  Уточните детали
-                  <small>Размер, посадка, наличие и окончательная цена</small>
+                  {t("about.step2")}
+                  <small>{t("about.step2copy")}</small>
                 </p>
               </div>
               <div>
                 <b>03</b>
                 <p>
-                  Согласуйте заказ
-                  <small>Макет, оплата и доставка до подтверждения</small>
+                  {t("about.step3")}
+                  <small>{t("about.step3copy")}</small>
                 </p>
               </div>
             </div>
@@ -577,27 +627,27 @@ export function Storefront() {
         <OwnersSection />
 
         <section className="container-frame faq-section">
-          <p className="label">ПЕРЕД ЗАКАЗОМ</p>
-          <h2>Все просто.</h2>
+          <p className="label">{t("faq.eyebrow")}</p>
+          <h2>{t("faq.title")}</h2>
           {[
             [
-              "Как оформить заказ?",
-              "Добавьте товары в корзину или нажмите «Оформить» в карточке. Мы подготовим сообщение с выбранными параметрами. " +
-                (whatsappUrl("")
-                  ? "Проверьте текст и отправьте его в WhatsApp магазина. Окончательные детали подтвердим в переписке."
-                  : "Номер WhatsApp подключим перед запуском. Пока можно скопировать текст и написать в Instagram Direct."),
+              t("faq.q1"),
+              t(whatsappUrl("") ? "faq.a1whatsapp" : "faq.a1offline"),
             ],
             [
-              "Как узнать цену и наличие?",
-              "Цены, размеры и наличие уточняются лично. Укажите желаемый размер или рост и вес: поможем с подбором конкретной модели. " + DELIVERY_TEXT + " " + PAYMENT_TEXT,
+              t("faq.q2"),
+              t("faq.a2", {
+                delivery: t("common.delivery"),
+                payment: t("common.payment"),
+              }),
             ],
             [
-              "Чем backpatch отличается от вышивки?",
-              "IJF backpatch — именная нашивка на спине: фамилия спортсмена и код страны, без декоративных настроек. Вышивка — компактный текст непосредственно на ткани в нижней части куртки или верхней части штанины, с выбором цвета, шрифта и ориентации. Финальный макет и требования к соревнованиям согласуем перед изготовлением.",
+              t("faq.q3"),
+              t("faq.a3"),
             ],
             [
-              "Нужна ли регистрация?",
-              "Нет. Корзина сохраняется в браузере на этом устройстве. Заказ оформляется в переписке с магазином.",
+              t("faq.q4"),
+              t("faq.a4"),
             ],
           ].map(([q, a]) => (
             <details key={q}>
@@ -614,12 +664,12 @@ export function Storefront() {
         <div className="container-frame">
           <div className="footer-top">
             <div>
-              <p className="label">НА СВЯЗИ</p>
+              <p className="label">{t("footer.eyebrow")}</p>
               <h2>
-                Начнем
-                <br />с разговора.
+                {t("footer.title1")}
+                <br />{t("footer.title2")}
               </h2>
-              <p>Поможем собрать ваш комплект.</p>
+              <p>{t("footer.copy")}</p>
             </div>
             <div className="footer-links">
               <button
@@ -651,27 +701,26 @@ export function Storefront() {
           </div>
         </div>
       </footer>
-      <nav className="mobile-dock" aria-label="Быстрая навигация">
-        <a href="#catalog">Каталог</a>
-        <a href="#atelier">Нашивка</a>
+      <nav className="mobile-dock" aria-label={t("nav.quick")}>
+        <a href="#catalog">{t("nav.catalog")}</a>
+        <a href="#atelier">{t("nav.patch")}</a>
         <button onClick={() => setView({ type: "cart" })}>
-          <BagIcon /> Корзина <b>{count}</b>
+          <BagIcon /> {t("header.cart")} <b>{count}</b>
         </button>
         <button onClick={() => setView({ type: "order", items: [] })}>
-          Связаться <Arrow />
+          {t("nav.contact")} <Arrow />
         </button>
       </nav>
       {storageError && (
         <div className="storage-notice" role="status">
-          Браузер не разрешил сохранение корзины. Она доступна до закрытия
-          страницы.
+          {t("storage.error")}
         </div>
       )}
       {notice && (
         <div className="shop-toast" role="status">
           {notice}
           <button onClick={() => setView({ type: "cart" })}>
-            В корзину <Arrow />
+            {t("toast.cart")} <Arrow />
           </button>
         </div>
       )}

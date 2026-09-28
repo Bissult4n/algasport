@@ -19,29 +19,32 @@
 
 ## Каталог и реальные фотографии
 
-Список товаров не изменён: 7 кимоно, 4 продукта FitLine и 1 жгут. Найдены 23 фотографии для 11 товаров. Все сохранены в локальных папках `public/images/kimono/` и `public/images/fitline/`, оптимизированы в WebP. В рантайме нет внешних ссылок на изображения.
+В каталоге 9 кимоно, 4 продукта FitLine и 1 жгут. В проекте документированы 60 локальных изображений, включая исходные фото, нормализованные каталожные кадры и предоставленные магазином PNG. Основные изображения каталога находятся в `public/images/products/`; исходные фотографии сохранены в галереях. В рантайме нет внешних ссылок на изображения.
 
 | Товар | Фото | Источник |
 | --- | ---: | --- |
-| Zone Migaku | 3 | [Mitsuboshi / Zone](https://zone.mitsuboshi-global.com/products/migaku-ijf-uniform) |
-| Zone Idomu | 3 | [Mitsuboshi / Zone](https://zone.mitsuboshi-global.com/products/idomu-ijf-uniform) |
-| Zone Kiwami | 4 | [Mitsuboshi / Zone](https://zone.mitsuboshi-global.com/products/kiwami-ijf-uniform) |
-| Adidas Champion III Green | 2 | [IMS Sport, Green Label](https://imssport.pl/pl/p/Judoga-Adidas-Champion-III-2-IJF-GREEN-LABEL/986) |
-| Adidas Champion III Gold | 3 | [Roninwear, White / Gold](https://www.roninwear.com/en/adidas-champion-iii-ijf-judogi-white-gold-p-22047.html) |
-| Adidas Champion III Red | 1 | [Gi&Obi, Red Label](https://gi-obi.com/urun/adidas-champion-iii-red-ijf-onayli-judo-gi/) |
-| Adidas Champion II | 3 | [IMS Sport](https://imssport.pl/pl/p/Judoga-Adidas-Champion-II-IJF-APPROVED/343) |
-| FitLine Activize | 1 | [FitLine / PM-International](https://www.fitline.com/us/en-us/products/0708054) |
-| FitLine Restorate | 1 | [FitLine / PM-International](https://www.fitline.com/us/en-us/products/0702037) |
-| FitLine Basics | 1 | [FitLine / PM-International](https://www.fitline.com/us/en-us/products/0705066) |
-| FitLine PowerCocktail | 1 | [FitLine / PM-International](https://www.fitline.com/us/en-us/products/0705067) |
-| Корейский жгут | 0 | Точная марка и модель не подтверждены, оставлена нейтральная заглушка |
+| Zone Migaku | белое и синее главные фото + исходная галерея | [Mitsuboshi / Zone](https://zone.mitsuboshi-global.com/products/migaku-ijf-uniform) |
+| Zone Idomu | белое и синее главные фото + исходная галерея | [Mitsuboshi / Zone](https://zone.mitsuboshi-global.com/products/idomu-ijf-uniform) |
+| Zone Kiwami | белое и синее главные фото + исходная галерея | [Mitsuboshi / Zone](https://zone.mitsuboshi-global.com/products/kiwami-ijf-uniform) |
+| Adidas Champion III Green | 3 прозрачных PNG: 3/4, фронт, спина | Предоставлены магазином |
+| Adidas Champion III Gold | 4 прозрачных PNG: общий вид и детали | Предоставлены магазином |
+| Adidas Champion III Red | 6 прозрачных PNG: фронт, 3/4, спина и детали | Предоставлены магазином |
+| Adidas Champion II | белый и синий прозрачные PNG | Предоставлены магазином |
+| Mizuno — белое кимоно | 1 PNG | Предоставлен магазином; точная модель и IJF-статус требуют подтверждения |
+| Mizuno — синее кимоно | 1 PNG | Предоставлен магазином; точная модель и IJF-статус требуют подтверждения |
+| FitLine Activize | нормализованное главное + 1 исходное | [FitLine / PM-International](https://www.fitline.com/kz/ru-ru/products/0708054) |
+| FitLine Restorate | нормализованное главное + 1 исходное | [FitLine / PM-International](https://www.fitline.com/kz/ru-ru/products/0702037) |
+| FitLine Basics | нормализованное главное + 1 исходное | [FitLine / PM-International](https://www.fitline.com/kz/ru-ru/products/0705066) |
+| FitLine PowerCocktail | нормализованное главное + 1 исходное | [FitLine / PM-International](https://www.fitline.com/kz/ru-ru/products/0705067) |
+| Корейский жгут | 3 PNG | Предоставлены магазином; точная марка и модель не заявляются |
 
-Green и Red обозначают маркировку модели у источников, а не зелёный/красный цвет ткани. Gold показан в варианте White / Gold. Это поясняется в карточках. Варианты упаковки FitLine, размеры, цвета и наличие согласуются с магазином, не представлены как подтверждённые остатки.
+Migaku, Idomu и Kiwami имеют подтверждённые официальными страницами белый и синий варианты. Переключатель меняет главное фото и цветовую галерею; выбор сохраняется в корзине и тексте заказа. Для Adidas дополнительные цвета не добавлены без подтверждения по текущему SKU. Green и Red обозначают маркировку модели у источников, а не зелёный/красный цвет ткани. Gold показан в варианте White / Gold. Варианты упаковки FitLine, размеры, цвета и наличие согласуются с магазином, не представлены как подтверждённые остатки.
 
-Точные URL оригиналов, локальные имена, размеры и даты скачивания хранятся в `image-sources.json`. AI-фотографии не использованы; прежние концептуальные изображения вынесены из `public/` в `design-assets/legacy-preview-images/` и не входят в экспорт.
+Точные URL оригиналов, локальные имена и размеры хранятся в `image-sources.json`. Подготовленные кадры Zone и FitLine используют единый холст и `contain`; предоставленные PNG Adidas, Mizuno, жгута и чёрных поясов сохранены без ретуши товара. У двух кимоно Mizuno фон встроен в исходные файлы и прозрачности нет; PNG поясов сохраняют прозрачность. Скрипты подготовки: `scripts/prepare-zone-catalog-images.mjs` и `scripts/prepare-catalog-images.mjs`. Hero использует два прозрачных PNG, предоставленных ALGA Sport Shop. AI-фотографии не использованы; наличие разрешения на коммерческое использование фотографий отдельно не заявляется.
 
 ## Рабочие функции
 
+- Централизованная локализация RU/KZ/EN: язык переключается без перезагрузки, сохраняется в `localStorage`, а каталог, FitLine, сравнение, персонализация, корзина и заказ используют общий активный язык.
 - Категории, фильтры, поиск, галереи и увеличение фотографии.
 - Клиентская корзина: количество, объединение одинаковых позиций, разные кастомизации, редактирование, удаление, сохранение между перезагрузками.
 - Единый текст заказа с параметрами всех позиций и корректной обработкой неизвестных цен.
@@ -54,7 +57,7 @@ Green и Red обозначают маркировку модели у исто�
 - TypeScript и production build.
 - Статический экспорт проверен и на корневом адресе, и с подпапкой `/alga-preview/`: изображения, скрипты, корзина и SVG работают с обоими вариантами размещения.
 - Unit-тесты двух типов персонализации, Unicode, кодирования ссылок, расчёта сумм, пустого номера, повреждённой и старой корзины.
-- Браузерная проверка сценариев каталога, корзины, редактирования, заказа, копирования, FAQ и прямых ссылок на товары.
+- Браузерная проверка сценариев каталога, корзины, редактирования, заказа, копирования, FAQ, прямых ссылок на товары и переключения RU/KZ/EN с сохранением после reload.
 - Мобильная эмуляция: ширины 320, 375, 390 и 768 px; без горизонтального переполнения страницы и модальных окон.
 - Визуальный просмотр реальных скриншотов hero, карточек, владельцев, backpatch и обеих зон вышивки. Тест проводился в Edge/Chromium; физический iPhone не использовался.
 

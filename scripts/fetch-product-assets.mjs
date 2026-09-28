@@ -24,6 +24,9 @@ add("adidas-champion-iii-gold", "https://www.roninwear.com/en/adidas-champion-ii
 add("adidas-champion-iii-red", "https://gi-obi.com/urun/adidas-champion-iii-red-ijf-onayli-judo-gi/", {
  "kimono/adidas-red-0.webp": "https://gi-obi.com/wp-content/uploads/2026/03/Adidas-Champion3-RedIJF695707024_w640_h640_4695707024.webp"
 });
+add("adidas-champion-iii-red", "https://combatmarkt.com/goods/kimono_dlya_dzyudo_champion_iii_ijf_red_logo_beloe_s_krasnym_logotipom/", {
+ "kimono/adidas-red-1.webp": "https://combatmarkt.com/upload/iblock/27d/kd3266ub8mvhhwi1qei58xgm8sk8r21n.jpg"
+});
 add("adidas-champion-ii", "https://imssport.pl/pl/p/Judoga-Adidas-Champion-II-IJF-APPROVED/343", {
  "kimono/adidas-ii-0.webp": ims + "productGfx_3241_500_500/J-IJF---Champion-II---White.jpg",
  "kimono/adidas-ii-back.webp": ims + "productGfx_3242_500_500/J-IJF-CHAMPIONII---WHITE---BACK.jpg",

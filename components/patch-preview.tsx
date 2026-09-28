@@ -5,6 +5,7 @@ import { asset } from "@/lib/shop-config";
 import { type Backpatch, type Customization } from "@/lib/customization";
 import { backOutline } from "./kimono-photo";
 import { EmbroideryPreview } from "./embroidery-preview";
+import { useI18n } from "@/lib/i18n/context";
 
 export function PatchPreview({ value }: { value: Customization }) {
   return value.type === "embroidery" ? (
@@ -15,21 +16,22 @@ export function PatchPreview({ value }: { value: Customization }) {
 }
 
 function BackpatchPreview({ value }: { value: Backpatch }) {
+  const { t } = useI18n();
   const uid = useId().replaceAll(":", "");
   const id = (s: string) => uid + s;
   const url = (s: string) => "url(#" + id(s) + ")";
-  const text = value.surname || "ВАША ФАМИЛИЯ";
+  const text = value.surname || t("preview.yourSurname");
   const chars = Array.from(text);
 
   return (
     <figure className="patch-preview backpatch-preview">
       <div className="preview-label">
-        <span className="live-dot" /> LIVE PREVIEW <span>IJF BACKPATCH</span>
+        <span className="live-dot" /> {t("preview.live")} <span>IJF BACKPATCH</span>
       </div>
       <svg
         viewBox="0 0 260 285"
         role="img"
-        aria-label={"Макет нашивки: " + text}
+        aria-label={t("preview.backpatchAria", { text })}
       >
         <defs>
           <clipPath id={id("photo")}>
@@ -158,10 +160,9 @@ function BackpatchPreview({ value }: { value: Backpatch }) {
           </g>
         </g>
       </svg>
-      <div className="preview-placement">Спина / фиксированное размещение</div>
+      <div className="preview-placement">{t("preview.backFixed")}</div>
       <figcaption>
-        Пример на реальном фото Adidas Champion II. Макет показывает размещение,
-        а не точный размер нанесения.
+        {t("preview.backpatchNote")}
       </figcaption>
     </figure>
   );

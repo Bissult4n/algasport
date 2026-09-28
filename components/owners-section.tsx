@@ -1,7 +1,11 @@
+"use client";
+
 import { owners } from "@/lib/shop-content";
 import { asset } from "@/lib/shop-config";
+import { useI18n } from "@/lib/i18n/context";
 
 export function OwnersSection() {
+  const { t } = useI18n();
   return (
     <section
       className="owners-section container-frame"
@@ -9,19 +13,19 @@ export function OwnersSection() {
     >
       <div className="owners-intro">
         <div>
-          <p className="label">ЛЮДИ ЗА МАГАЗИНОМ</p>
+          <p className="label">{t("owners.eyebrow")}</p>
           <h2 id="owners-title">
-            СДЕЛАНО
+            {t("owners.title1")}
             <br />
-            <span>ДЗЮДОИСТАМИ.</span>
+            <span>{t("owners.title2")}</span>
           </h2>
         </div>
         <div>
           <p className="owners-statement">
-            Мы продаём то, что сами готовы надеть на татами.
+            {t("owners.statement")}
           </p>
           <p className="muted">
-            У магазина два владельца: братья, оба с чёрными поясами по дзюдо.
+            {t("owners.copy")}
           </p>
         </div>
       </div>
@@ -32,7 +36,7 @@ export function OwnersSection() {
               {owner.photo ? (
                 <img
                   src={asset(owner.photo)}
-                  alt={owner.name || "Владелец ALGA Sport Shop"}
+                  alt={owner.name || t("owners.alt")}
                   width="400"
                   height="500"
                   loading="lazy"
@@ -40,21 +44,21 @@ export function OwnersSection() {
               ) : (
                 <div className="owner-photo-placeholder">
                   <span aria-hidden="true">ALGA</span>
-                  <p>Фотография владельца</p>
+                  <p>{t("owners.photo")}</p>
                 </div>
               )}
               <span className="owner-number">0{i + 1}</span>
             </div>
             <div className="owner-copy">
-              <p className="label">СОВЛАДЕЛЕЦ ALGA</p>
-              <h3>{owner.name || "Имя владельца"}</h3>
+              <p className="label">{t("owners.role")}</p>
+              <h3>{owner.name || t("owners.name")}</h3>
               <p className="owner-belt">
                 <span aria-hidden="true" />
-                Чёрный пояс{owner.dan ? " · " + owner.dan : ""}
+                {t("owners.belt")}{owner.dan ? " · " + owner.dan : ""}
               </p>
               <p className="owner-description">
                 {owner.description ||
-                  "Один из братьев, создавших ALGA Sport Shop."}
+                  t("owners.description")}
               </p>
             </div>
           </article>

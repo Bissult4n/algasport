@@ -1,6 +1,7 @@
 "use client";
 import { useId } from "react";
 import { asset } from "@/lib/shop-config";
+import { useI18n } from "@/lib/i18n/context";
 
 // SVG clipping follows the existing photograph's silhouette; no generated product pixels.
 export const frontOutline =
@@ -8,6 +9,7 @@ export const frontOutline =
 export const backOutline =
   "M121 25L182 25L189 32Q210 38 222 55L232 81L237 127L243 164L252 222L241 241L213 248L208 209L207 237L211 259L204 271L208 321L218 386L218 489L187 497L175 490L156 380L141 325L125 374L118 485L95 491L73 486L74 391L75 321L78 272L74 263L83 223L84 188L75 197L62 241L46 244L17 231L35 172L50 116L65 76L78 57L101 41L120 34Z";
 export function KimonoPhoto({ back = false }: { back?: boolean }) {
+  const { t } = useI18n();
   const id = useId().replaceAll(":", "") + "cutout";
   return (
     <svg
@@ -15,10 +17,7 @@ export function KimonoPhoto({ back = false }: { back?: boolean }) {
       viewBox={back ? "0 0 260 500" : "0 0 281 500"}
       preserveAspectRatio="xMidYMid meet"
       role="img"
-      aria-label={
-        "Реальное фото Adidas Champion II, " +
-        (back ? "вид сзади" : "вид спереди")
-      }
+      aria-label={t(back ? "preview.kimonoBack" : "preview.kimonoFront")}
     >
       <defs>
         <clipPath id={id}>

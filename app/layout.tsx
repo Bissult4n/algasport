@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ALLOW_INDEXING, SITE_URL } from "@/lib/shop-config";
+import { I18nProvider } from "@/lib/i18n/context";
 
 export const metadata: Metadata = {
   metadataBase: new URL(
@@ -37,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru" suppressHydrationWarning>
-      <body>{children}</body>
+      <body><I18nProvider>{children}</I18nProvider></body>
     </html>
   );
 }

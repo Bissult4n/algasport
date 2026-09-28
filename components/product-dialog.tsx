@@ -1,6 +1,6 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { categoryName, type Product } from "@/lib/catalog";
+import { productHasSize, productImages, type Product } from "@/lib/catalog";
 import {
   defaultCustomization,
   itemTotal,
@@ -10,15 +10,24 @@ import {
 } from "@/lib/orders";
 import {
   defaultEmbroidery,
+  embroideryColorText,
   embroideryColors,
   type Backpatch,
   type Embroidery,
   type Customization,
 } from "@/lib/customization";
+import { useI18n } from "@/lib/i18n/context";
+import {
+  localizedCategory,
+  localizedProduct,
+  localizedVariant,
+  localizedVariantLabel,
+} from "@/lib/i18n/catalog";
 import { CUSTOMIZATION_PRICES } from "@/lib/shop-config";
 import { Arrow, Dialog, Photo, Quantity } from "./shop-ui";
 import { PatchPreview } from "./patch-preview";
 import { FitLineInformation, FitLineOverview } from "./fitline-information";
+import { ProductFacts } from "./product-facts";
 
 export function ProductDialog({
   product,
@@ -33,6 +42,8 @@ export function ProductDialog({
   onAdd: (item: CartItem) => void;
   onOrder: (item: CartItem) => void;
 }) {
+  const { locale, t } = useI18n();
+  const copy = localizedProduct(product, locale);
   const [item, setItem] = useState<CartItem>(() =>
     initial
       ? { ...initial, customization: { ...initial.customization } }
@@ -57,6 +68,14 @@ export function ProductDialog({
     mode === "backpatch"
       ? { ...backpatch, enabled }
       : { ...embroidery, enabled };
+  const images = productImages(product, item.variant);
+  const variantFieldLabel =
+    localizedVariantLabel(product.variantLabel, locale) ||
+    (product.category === "vitamins"
+      ? t("product.flavorVariant")
+      : product.variantSwatches && product.category === "kimono"
+        ? t("product.kimonoColor")
+        : t("product.colorVariant"));
   function updateBackpatch(patch: Partial<Backpatch>) {
     setBackpatch((v) => ({ ...v, ...patch }));
     setError("");
@@ -72,11 +91,11 @@ export function ProductDialog({
       c.type === "backpatch" &&
       (!c.surname.trim() || !/^[A-Z]{3}$/.test(c.country))
     ) {
-      setError("Укажите фамилию и трехбуквенный код страны.");
+      setError(t("custom.errorBackpatch"));
       return;
     }
     if (c.enabled && c.type === "embroidery" && !c.text.trim()) {
-      setError("Введите текст для вышивки.");
+      setError(t("custom.errorEmbroidery"));
       return;
     }
     const customization = !c.enabled
@@ -90,7 +109,7 @@ export function ProductDialog({
     else onAdd(clean);
   }
   return (
-    <Dialog title={product.name} onClose={onClose} wide>
+    <Dialog title={copy.name} onClose={onClose} wide>
       <form onSubmit={submit} className="product-form">
         <div className="product-detail-body">
           <div className="detail-gallery">
@@ -98,26 +117,26 @@ export function ProductDialog({
               className={"gallery-main " + (zoom ? "zoomed" : "")}
               type="button"
               onClick={() => setZoom((v) => !v)}
-              aria-label={zoom ? "Уменьшить фото" : "Увеличить фото"}
-              disabled={!product.images.length}
+              aria-label={zoom ? t("product.zoomOut") : t("product.zoomIn")}
+              disabled={!images.length}
             >
               <Photo
-                src={product.images[photo]}
-                alt={product.name + ", фото " + (photo + 1)}
+                src={images[photo]}
+                alt={t("product.photoAlt", { name: copy.name, number: photo + 1 })}
                 eager
               />
-              {!!product.images.length && (
-                <span className="zoom-label">{zoom ? "−" : "+"} Детали</span>
+              {!!images.length && (
+                <span className="zoom-label">{zoom ? "−" : "+"} {t("common.details")}</span>
               )}
             </button>
-            {product.images.length > 1 && (
+            {images.length > 1 && (
               <div className="thumbnails">
-                {product.images.map((src, i) => (
+                {images.map((src, i) => (
                   <button
                     key={src}
                     className={i === photo ? "selected" : ""}
                     type="button"
-                    aria-label={"Фото " + (i + 1)}
+                    aria-label={t("product.photo", { number: i + 1 })}
                     aria-pressed={i === photo}
                     onClick={() => {
                       setPhoto(i);
@@ -130,9 +149,9 @@ export function ProductDialog({
               </div>
             )}
             {product.category !== "vitamins" && <p className="muted photo-note">
-              {product.images.length
-                ? "Реальные фото модели. Цвет и комплектацию подтвердим в переписке."
-                : "Точная модель и фотография ожидают подтверждения магазина."}
+              {images.length
+                ? t("product.realPhoto")
+                : t("product.missingPhoto")}
             </p>}
             {c.enabled && (
               <div className="desktop-preview">
@@ -142,54 +161,85 @@ export function ProductDialog({
           </div>
           <div className="detail-fields">
             <p className="label">
-              {product.brand} / {categoryName(product.category)}
+              {product.brand} / {localizedCategory(product.category, locale).name}
             </p>
-            {product.category === "vitamins" ? <FitLineOverview productId={product.id} /> : <p className="detail-description">{product.description}</p>}
-            <p className="detail-price">{priceText(product.price)}</p>
+            {product.category === "vitamins" ? <FitLineOverview productId={product.id} /> : <p className="detail-description">{copy.description}</p>}
+            <ProductFacts specs={copy.specs} />
+            <p className="detail-price">{priceText(product.price, locale)}</p>
             <p className="muted small-copy">
-            {product.availability || "Наличие и окончательную стоимость уточним при заказе."}
+            {copy.availability || t("product.orderAvailability")}
             </p>
             <div className="option-grid">
-              {product.category === "kimono" && (
+              {productHasSize(product) && (
                 <label className="input-label">
-                  Желаемый размер
+                  {t("product.size")}
                   <input
                     className="field"
                     value={item.size}
                     maxLength={40}
-                    placeholder="Например, 175 см или 3.5"
+                    placeholder={t(product.sizeField === "belt"
+                      ? "product.beltSizePlaceholder"
+                      : "product.sizePlaceholder")}
                     onChange={(e) => setItem({ ...item, size: e.target.value })}
                   />
                   <small>
-                    Не знаете размер? Укажите рост и вес, поможем с посадкой
-                    этой модели.
+                    {t(product.sizeField === "belt"
+                      ? "product.beltSizeHelp"
+                      : "product.sizeHelp")}
                   </small>
                 </label>
               )}
-              <label className="input-label">
-                {product.category === "vitamins"
-                  ? "Вкус / вариант"
-                  : "Цвет / вариант"}
-                <select
-                  aria-label={
-                    product.category === "vitamins"
-                      ? "Вкус / вариант"
-                      : "Цвет / вариант"
-                  }
-                  className="field"
-                  value={item.variant}
-                  onChange={(e) =>
-                    setItem({ ...item, variant: e.target.value })
-                  }
-                >
-                  {product.variants.map((v) => (
-                    <option key={v}>{v}</option>
-                  ))}
-                </select>
-              </label>
+              {product.variantSwatches ? (
+                <fieldset className="input-label variant-fieldset">
+                  <legend>{variantFieldLabel}</legend>
+                  <div className="variant-picker">
+                    {product.variants.map((name) => (
+                      <button
+                        type="button"
+                        key={name}
+                        className={item.variant === name ? "active" : ""}
+                        aria-label={`${variantFieldLabel}: ${localizedVariant(name, locale)}`}
+                        aria-pressed={item.variant === name}
+                        onClick={() => {
+                          setItem({ ...item, variant: name });
+                          setPhoto(0);
+                          setZoom(false);
+                        }}
+                      >
+                        <span
+                          className="color-swatch"
+                          style={{ background: product.variantSwatches?.[name] }}
+                          aria-hidden="true"
+                        />
+                        {localizedVariant(name, locale)}
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
+              ) : (
+                <label className="input-label">
+                  {variantFieldLabel}
+                  <select
+                    aria-label={
+                      variantFieldLabel
+                    }
+                    className="field"
+                    value={item.variant}
+                    onChange={(e) => {
+                      setItem({ ...item, variant: e.target.value });
+                      setPhoto(0);
+                      setZoom(false);
+                    }}
+                  >
+                    {product.variants.map((v) => (
+                      <option key={v} value={v}>{localizedVariant(v, locale)}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
             </div>
             <div className="quantity-row">
-              <span className="input-label">Количество</span>
+              <span className="input-label">{t("common.quantity")}</span>
               <Quantity
                 value={item.quantity}
                 onChange={(quantity) => setItem({ ...item, quantity })}
@@ -199,14 +249,14 @@ export function ProductDialog({
               <section className="custom-fields">
                 <label className="custom-toggle">
                   <span>
-                    <strong>Персонализация</strong>
-                    <small>Нашивка или именная вышивка</small>
+                    <strong>{t("custom.title")}</strong>
+                    <small>{t("custom.subtitle")}</small>
                   </span>
                   <input
                     type="checkbox"
                     checked={c.enabled}
                     onChange={(e) => setEnabled(e.target.checked)}
-                    aria-label="Включить кастомизацию"
+                    aria-label={t("custom.enable")}
                   />
                   <span className="switch" aria-hidden="true" />
                 </label>
@@ -215,12 +265,12 @@ export function ProductDialog({
                     <div
                       className="segmented"
                       role="group"
-                      aria-label="Тип персонализации"
+                      aria-label={t("custom.type")}
                     >
                       {(
                         [
                           ["backpatch", "IJF backpatch"],
-                          ["embroidery", "Вышивка"],
+                          ["embroidery", t("custom.embroidery")],
                         ] as const
                       ).map(([type, label]) => (
                         <button
@@ -240,13 +290,12 @@ export function ProductDialog({
                     {c.type === "backpatch" ? (
                       <div className="backpatch-fields">
                         <p className="mode-description">
-                          Именная нашивка с фамилией и кодом страны. Используйте
-                          написание, нужное для соревнований.
+                          {t("custom.modeBackpatch")}
                         </p>
                         <label className="input-label">
-                          Фамилия спортсмена
+                          {t("custom.surname")}
                           <input
-                            aria-label="Фамилия спортсмена"
+                            aria-label={t("custom.surname")}
                             className="field"
                             placeholder="A. SERIKOV"
                             required
@@ -261,15 +310,15 @@ export function ProductDialog({
                           />
                         </label>
                         <label className="input-label country-field">
-                          Код страны
+                          {t("custom.country")}
                           <input
-                            aria-label="Код страны"
+                            aria-label={t("custom.country")}
                             className="field"
                             required
                             value={backpatch.country}
                             pattern="[A-Z]{3}"
                             maxLength={3}
-                            title="Три латинские буквы, например KAZ"
+                            title={t("custom.countryHint")}
                             onChange={(e) =>
                               updateBackpatch({
                                 country: e.target.value
@@ -281,23 +330,22 @@ export function ProductDialog({
                         </label>
                         <p className="fixed-placement">
                           <span className="fixed-marker" aria-hidden="true" />
-                          Расположение: <strong>Спина</strong>
-                          <span>фиксировано</span>
+                          {t("custom.placementFixed")} <strong>{t("custom.back")}</strong>
+                          <span>{t("custom.fixed")}</span>
                         </p>
                       </div>
                     ) : (
                       <div className="embroidery-fields">
                         <p className="mode-description">
-                          Компактная надпись на ткани, без подложки и рамки.
-                          Кириллица, латиница и японские символы.
+                          {t("custom.modeEmbroidery")}
                         </p>
                         <label className="input-label">
-                          Текст вышивки
+                          {t("custom.text")}
                           <input
-                            aria-label="Текст вышивки"
+                            aria-label={t("custom.text")}
                             className="field"
                             required
-                            placeholder="Например, 柔道"
+                            placeholder={t("custom.textPlaceholder")}
                             value={embroidery.text}
                             maxLength={40}
                             onChange={(e) =>
@@ -307,9 +355,9 @@ export function ProductDialog({
                         </label>
                         <div className="option-grid">
                           <label className="input-label">
-                            Место нанесения
+                            {t("custom.placement")}
                             <select
-                              aria-label="Место нанесения"
+                              aria-label={t("custom.placement")}
                               className="field"
                               value={embroidery.placement}
                               onChange={(e) =>
@@ -320,22 +368,22 @@ export function ProductDialog({
                                 })
                               }
                             >
-                              <option>Куртка</option>
-                              <option>Штаны</option>
-                              <option>Пояс</option>
+                              <option value="Куртка">{t("custom.jacket")}</option>
+                              <option value="Штаны">{t("custom.pants")}</option>
+                              <option value="Пояс">{t("custom.belt")}</option>
                             </select>
                             <small>
                               {embroidery.placement === "Куртка"
-                                ? "Нижняя часть куртки"
+                                ? t("custom.jacketHint")
                                 : embroidery.placement === "Штаны"
-                                  ? "Верхняя часть штанины"
-                                  : "Возле одного из концов пояса"}
+                                  ? t("custom.pantsHint")
+                                  : t("custom.beltHint")}
                             </small>
                           </label>
                           <label className="input-label">
-                            Цвет нити
+                            {t("custom.threadColor")}
                             <select
-                              aria-label="Цвет нити"
+                              aria-label={t("custom.threadColor")}
                               className="field"
                               value={embroidery.color}
                               onChange={(e) =>
@@ -345,14 +393,14 @@ export function ProductDialog({
                               }
                             >
                               {Object.keys(embroideryColors).map((v) => (
-                                <option key={v}>{v}</option>
+                                <option key={v} value={v}>{embroideryColorText(v as Embroidery["color"], locale)}</option>
                               ))}
                             </select>
                           </label>
                           <label className="input-label">
-                            Шрифт
+                            {t("custom.font")}
                             <select
-                              aria-label="Шрифт"
+                              aria-label={t("custom.font")}
                               className="field"
                               value={embroidery.font}
                               onChange={(e) =>
@@ -367,9 +415,9 @@ export function ProductDialog({
                             </select>
                           </label>
                           <label className="input-label">
-                            Ориентация
+                            {t("custom.orientation")}
                             <select
-                              aria-label="Ориентация"
+                              aria-label={t("custom.orientation")}
                               className="field"
                               value={embroidery.orientation}
                               onChange={(e) =>
@@ -379,19 +427,18 @@ export function ProductDialog({
                                 })
                               }
                             >
-                              <option value="vertical">Вертикально</option>
-                              <option value="horizontal">Горизонтально</option>
+                              <option value="vertical">{t("custom.vertical")}</option>
+                              <option value="horizontal">{t("custom.horizontal")}</option>
                             </select>
                           </label>
                         </div>
                         {embroidery.legacyNote && (
                           <p className="mode-description">
-                            {embroidery.legacyNote}
+                            {locale === "ru" ? embroidery.legacyNote : t("orderMessage.needsAgreement")}
                           </p>
                         )}
                         <p className="small-copy muted">
-                          Зоны примерные, надпись будет компактной. Точное место
-                          и размер согласуем по выбранной модели.
+                          {t("custom.zoneNote")}
                         </p>
                       </div>
                     )}
@@ -399,12 +446,11 @@ export function ProductDialog({
                       <PatchPreview value={c} />
                     </div>
                     <p className="custom-price">
-                      Доплата за кастомизацию{" "}
-                      <strong>{priceText(CUSTOMIZATION_PRICES[c.type])}</strong>
+                      {t("custom.extra")}{" "}
+                      <strong>{priceText(CUSTOMIZATION_PRICES[c.type], locale)}</strong>
                     </p>
                     <p className="small-copy muted">
-                      Финальный макет и требования к соревнованиям согласуем
-                      перед изготовлением.
+                      {t("custom.finalNote")}
                     </p>
                   </>
                 )}
@@ -412,8 +458,8 @@ export function ProductDialog({
             )}
             <FitLineInformation productId={product.id} />
             {product.category !== "vitamins" && <details className="product-info">
-              <summary>О товаре и заказе</summary>
-              <p>{product.detail}</p>
+              <summary>{t("product.about")}</summary>
+              <p>{copy.detail}</p>
             </details>}
             {error && (
               <p role="alert" className="error-copy">
@@ -424,16 +470,16 @@ export function ProductDialog({
         </div>
         <div className="dialog-actions">
           <div className="action-total">
-            <span>Итого</span>
+            <span>{t("product.total")}</span>
             <strong>
-              {priceText(itemTotal({ ...item, customization: c }))}
+              {priceText(itemTotal({ ...item, customization: c }), locale)}
             </strong>
           </div>
           <button type="submit" value="add" className="btn-secondary">
-            {initial?.key ? "Сохранить изменения" : "Добавить в корзину"}
+            {initial?.key ? t("product.save") : t("product.add")}
           </button>
           <button type="submit" value="order" className="btn-primary">
-            Оформить <Arrow />
+            {t("product.order")} <Arrow />
           </button>
         </div>
       </form>

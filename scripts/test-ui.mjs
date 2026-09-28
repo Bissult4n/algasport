@@ -8,6 +8,7 @@ const port = process.env.TEST_PORT || "4175";
 const origin = "http://127.0.0.1:" + port;
 const url = origin + (process.env.NEXT_PUBLIC_BASE_PATH || "") + "/";
 const cartKey = "alga:cart:v2";
+const localeKey = "alga:locale:v1";
 const artifacts = "test-results";
 const server = spawn(process.execPath, ["scripts/preview.mjs"], {
   env: { ...process.env, PORT: port }, stdio: ["ignore", "pipe", "pipe"],
@@ -77,7 +78,10 @@ try {
     });
     server.stderr.on("data", chunk => process.stderr.write(chunk));
   });
-  browser = await chromium.launch({ headless: true, channel: process.env.PLAYWRIGHT_CHANNEL || undefined });
+  browser = await chromium.launch({
+    headless: true,
+    channel: process.env.PLAYWRIGHT_CHANNEL || undefined,
+  });
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, permissions: ["clipboard-read", "clipboard-write"] });
   const errors = [], failures = [], requests = [];
   context.on("page", page => {
@@ -92,27 +96,47 @@ try {
   const page = await context.newPage();
   await page.goto(url, { waitUntil: "networkidle" });
   const dialog = page.locator("dialog");
-  assert.equal(await page.locator("#catalog .catalog-card").count(), 12);
+  assert.equal(await page.locator("#catalog .catalog-card").count(), 16);
   assert.equal(await page.locator(".owner-photo-placeholder").count(), 2);
   await mkdir(artifacts, { recursive: true });
   await page.screenshot({ path: artifacts + "/desktop.png" });
 
-  for (const [name, count] of [["Кимоно", 7], ["Витамины", 4], ["Снаряжение", 1], ["Все товары", 12]]) {
+  for (const [name, count] of [["Кимоно", 9], ["Витамины", 4], ["Снаряжение", 3], ["Все товары", 16]]) {
     await page.getByRole("button", { name: new RegExp("^" + name + "\\s*" + count + "$" ) }).click();
     assert.equal(await page.locator("#catalog .catalog-card").count(), count);
   }
   await page.getByRole("searchbox").fill("kiwami");
   assert.equal(await page.locator("#catalog .catalog-card").count(), 1);
+  await page.getByRole("searchbox").fill("Mizuno");
+  assert.equal(await page.locator("#catalog .catalog-card").count(), 3);
+  await page.getByRole("searchbox").fill("Sakura Black Belt");
+  assert.equal(await page.locator("#catalog .catalog-card").count(), 1);
+  await page.getByRole("searchbox").fill("Yusho");
+  assert.equal(await page.locator("#catalog .catalog-card").count(), 2);
+  await page.getByRole("searchbox").fill("Yusho Best");
+  assert.equal(await page.locator("#catalog .catalog-card").count(), 1);
   await page.getByRole("searchbox").fill("unknown-product");
   assert.equal(await page.locator(".no-results").count(), 1);
   await page.getByRole("button", { name: "Показать все товары" }).click();
   const cards = page.locator("#catalog .catalog-card");
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 16; i++) {
     const card = cards.nth(i);
     const name = await card.locator("h3").textContent();
+    if (i < 9) assert.equal(await card.locator(".product-facts.compact").count(), 1, name + ": compact facts");
     await card.getByRole("button", { name: "Оформить", exact: true }).click();
     assert.equal(await dialog.getAttribute("aria-label"), name);
+    if (i < 9) assert.equal(await dialog.locator(".product-facts:not(.compact)").count(), 1, name + ": dialog facts");
     const mainPhoto = dialog.locator(".gallery-main img");
+    if (name.startsWith("Zone ")) {
+      const white = await mainPhoto.getAttribute("src");
+      await dialog.getByRole("button", { name: "Цвет кимоно: Синий" }).click();
+      const blue = await mainPhoto.getAttribute("src");
+      assert.notEqual(blue, white, name + ": color changes main photo");
+      assert.ok(blue.includes("-blue-main.webp"));
+      assert.ok(await dialog.locator(".thumbnails button").count() >= 2);
+      await dialog.getByRole("button", { name: "Цвет кимоно: Белый" }).click();
+      assert.ok((await mainPhoto.getAttribute("src")).includes("-white-main.webp"));
+    }
     if (await mainPhoto.count()) {
       await mainPhoto.scrollIntoViewIfNeeded();
       await mainPhoto.evaluate(img => img.decode());
@@ -150,6 +174,7 @@ try {
   await dialog.getByRole("button", { name: "Изменить", exact: true }).click();
   await dialog.getByLabel("Желаемый размер").fill("180 см, 75 кг");
   await dialog.getByLabel("Включить кастомизацию").check();
+  assert.ok((await dialog.locator(".custom-price").textContent()).includes("16 000 ₸"));
   assert.equal(await dialog.getByLabel("Цвет нити").count(), 0);
   await dialog.getByLabel("Фамилия спортсмена").fill("A. TESTOV");
   await dialog.getByLabel("Код страны", { exact: true }).fill("JPN");
@@ -165,7 +190,7 @@ try {
   await dialog.getByRole("button", { name: "Вышивка", exact: true }).click();
   assert.equal(await dialog.getByLabel("Текст вышивки").inputValue(), "柔道・Алға & +");
   await dialog.getByRole("button", { name: "Сохранить изменения" }).click();
-  await cards.nth(7).getByRole("button", { name: "Добавить в корзину", exact: true }).click();
+  await cards.filter({ hasText: "FitLine Activize" }).getByRole("button", { name: "Добавить в корзину", exact: true }).click();
   await page.locator(".cart-button").click();
   await dialog.getByRole("button", { name: "Оформить заказ", exact: true }).click();
   const message = await dialog.getByLabel("Текст заказа").inputValue();
@@ -245,6 +270,115 @@ try {
   await page.reload({ waitUntil: "networkidle" });
   assert.equal(await page.locator(".cart-button b").textContent(), "0");
 
+  await page.goto(url + "#product/korean-band", { waitUntil: "networkidle" });
+  await dialog.waitFor({ state: "visible" });
+  assert.equal(await dialog.getByLabel("Ширина").inputValue(), "5 см × 200 см");
+  assert.equal(await dialog.locator(".thumbnails button").count(), 3);
+  await dialog.getByRole("button", { name: "Добавить в корзину", exact: true }).click();
+  await page.goto(url + "#product/korean-band", { waitUntil: "networkidle" });
+  await dialog.getByRole("button", { name: "Добавить в корзину", exact: true }).click();
+  let bandCart = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), cartKey);
+  assert.equal(bandCart.length, 1, "Same band width merges into one cart line");
+  assert.equal(bandCart[0].quantity, 2);
+  await page.goto(url + "#product/korean-band", { waitUntil: "networkidle" });
+  await dialog.getByLabel("Ширина").selectOption("3 см × 200 см");
+  await dialog.getByRole("button", { name: "Добавить в корзину", exact: true }).click();
+  bandCart = await page.evaluate(key => JSON.parse(localStorage.getItem(key)), cartKey);
+  assert.equal(bandCart.length, 2, "Different band widths use separate cart lines");
+  await page.locator(".cart-button").click();
+  assert.equal(await dialog.locator(".cart-line").count(), 2);
+  assert.ok((await dialog.textContent()).includes("Ширина: 5 см × 200 см"));
+  assert.ok((await dialog.textContent()).includes("Ширина: 3 см × 200 см"));
+  await dialog.getByRole("button", { name: "Оформить заказ", exact: true }).click();
+  const bandOrder = await dialog.getByLabel("Текст заказа").inputValue();
+  assert.ok(bandOrder.includes("Ширина: 5 см × 200 см"));
+  assert.ok(bandOrder.includes("Ширина: 3 см × 200 см"));
+  await page.evaluate(key => localStorage.removeItem(key), cartKey);
+  await page.reload({ waitUntil: "networkidle" });
+
+  await page.goto(url + "#product/mizuno-black-belt", { waitUntil: "networkidle" });
+  await dialog.getByLabel("Желаемый размер").fill("4");
+  assert.equal((await dialog.locator(".detail-price").textContent()).trim(), "25 000 ₸");
+  await dialog.getByRole("button", { name: "Добавить в корзину", exact: true }).click();
+  await page.goto(url + "#product/sakura-black-belt", { waitUntil: "networkidle" });
+  await dialog.getByLabel("Желаемый размер").fill("3");
+  assert.equal((await dialog.locator(".detail-price").textContent()).trim(), "25 000–30 000 ₸");
+  await dialog.getByRole("button", { name: "Добавить в корзину", exact: true }).click();
+  await page.locator(".cart-button").click();
+  const beltCartText = await dialog.textContent();
+  for (const value of ["Mizuno Black Belt", "Sakura Black Belt", "Размер: 4", "Размер: 3", "50 000–55 000 ₸"])
+    assert.ok(beltCartText.includes(value), value);
+  await dialog.getByRole("button", { name: "Оформить заказ", exact: true }).click();
+  const beltOrderText = await dialog.getByLabel("Текст заказа").inputValue();
+  for (const value of ["Mizuno Black Belt", "Sakura Black Belt", "Цена: 25 000 ₸", "Цена: 25 000–30 000 ₸", "Итого: 50 000–55 000 ₸"])
+    assert.ok(beltOrderText.includes(value), value);
+  await page.evaluate(key => localStorage.removeItem(key), cartKey);
+  await page.reload({ waitUntil: "networkidle" });
+
+  await page.goto(url + "#product/zone-migaku", { waitUntil: "networkidle" });
+  await dialog.getByLabel("Включить кастомизацию").check();
+  await dialog.getByLabel("Фамилия спортсмена").fill("A. TESTOV");
+  await dialog.getByRole("button", { name: "Добавить в корзину", exact: true }).click();
+  await page.locator(".cart-button").click();
+  const patchCartText = await dialog.textContent();
+  assert.ok(patchCartText.includes("Доплата за кастомизацию: 16 000 ₸"));
+  assert.ok(patchCartText.includes("101 000 ₸"));
+  await dialog.getByRole("button", { name: "Оформить заказ", exact: true }).click();
+  const patchOrderText = await dialog.getByLabel("Текст заказа").inputValue();
+  assert.ok(patchOrderText.includes("Доплата: 16 000 ₸"));
+  assert.ok(patchOrderText.includes("Итого по товару: 101 000 ₸"));
+  await page.evaluate(key => localStorage.removeItem(key), cartKey);
+  await page.reload({ waitUntil: "networkidle" });
+
+  const localeContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  const localized = await localeContext.newPage();
+  localized.on("pageerror", error => errors.push(error.message));
+  localized.on("console", message => { if (message.type() === "error") errors.push(message.text()); });
+  localized.on("response", response => { if (response.status() >= 400) failures.push(response.url()); });
+  await localized.goto(url, { waitUntil: "networkidle" });
+  await localized.getByRole("button", { name: "KZ", exact: true }).click();
+  await localized.waitForFunction(() => document.documentElement.lang === "kk");
+  assert.equal(await localized.evaluate(key => localStorage.getItem(key), localeKey), "kk");
+  assert.ok((await localized.locator(".hero-copy").textContent()).includes("Дзюдодағы жолыңызға"));
+  assert.ok((await localized.locator(".faq-section").textContent()).includes("Тапсырысты қалай рәсімдеймін?"));
+  await localized.getByRole("searchbox").fill("Кореялық");
+  assert.equal(await localized.locator("#catalog .catalog-card").count(), 1, "Kazakh catalog copy is searchable");
+  await localized.getByRole("searchbox").fill("");
+  await localized.goto(url + "#product/adidas-champion-ii", { waitUntil: "networkidle" });
+  const localizedDialog = localized.locator("dialog");
+  await localizedDialog.getByRole("button", { name: "Кимоно түсі: Көк", exact: true }).click();
+  await localizedDialog.getByRole("button", { name: "Себетке қосу", exact: true }).click();
+  await localized.goto(url + "#product/adidas-champion-ii", { waitUntil: "networkidle" });
+  await localizedDialog.getByRole("button", { name: "Себетке қосу", exact: true }).click();
+  assert.equal(await localized.locator(".cart-button b").textContent(), "2");
+  await localized.locator(".cart-button").click();
+  assert.ok((await localizedDialog.textContent()).includes("Кимоно түсі: Ақ"));
+  assert.ok((await localizedDialog.textContent()).includes("Кимоно түсі: Көк"));
+  await localizedDialog.getByRole("button", { name: "Тапсырысты рәсімдеу", exact: true }).click();
+  const kkOrder = await localizedDialog.getByLabel("Тапсырыс мәтіні").inputValue();
+  assert.ok(kkOrder.includes("Сәлеметсіз бе! Тапсырыс бергім келеді."));
+  assert.ok(kkOrder.includes("Нұсқа/түс: Ақ"));
+  assert.ok(kkOrder.includes("Нұсқа/түс: Көк"));
+  await localized.screenshot({ path: artifacts + "/localization-kz.png" });
+  await localized.keyboard.press("Escape");
+  await localized.getByRole("button", { name: "EN", exact: true }).click();
+  await localized.waitForFunction(() => document.documentElement.lang === "en");
+  assert.equal(await localized.locator(".cart-button b").textContent(), "2", "Language changes preserve cart contents");
+  await localized.locator(".cart-button").click();
+  await localizedDialog.getByRole("button", { name: "Checkout", exact: true }).click();
+  const enOrder = await localizedDialog.getByLabel("Order text").inputValue();
+  assert.ok(enOrder.includes("Hello! I would like to place an order."));
+  assert.ok(enOrder.includes("Option/color: White"));
+  assert.ok(enOrder.includes("Option/color: Blue"));
+  await localized.keyboard.press("Escape");
+  await localized.reload({ waitUntil: "networkidle" });
+  assert.equal(await localized.evaluate(key => localStorage.getItem(key), localeKey), "en");
+  assert.equal(await localized.locator("html").getAttribute("lang"), "en");
+  assert.equal(await localized.getByRole("button", { name: "EN", exact: true }).getAttribute("aria-pressed"), "true");
+  assert.equal(await localized.locator(".cart-button b").textContent(), "2", "Cart persists after localized reload");
+  await localized.screenshot({ path: artifacts + "/localization-en.png" });
+  await localeContext.close();
+
   const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true });
   const mobile = await mobileContext.newPage();
   mobile.on("pageerror", error => errors.push(error.message));
@@ -257,6 +391,31 @@ try {
   await mobile.locator("img").evaluateAll(images => Promise.all(images.filter(image => image.getClientRects().length).map(image => image.decode())));
   await mobile.evaluate(() => scrollTo({ top: 0, behavior: "instant" }));
   await mobile.screenshot({ path: artifacts + "/mobile.png" });
+  await mobile.goto(url + "#product/korean-band", { waitUntil: "networkidle" });
+  const bandModal = mobile.locator("dialog");
+  assert.equal(await bandModal.getByLabel("Ширина").inputValue(), "5 см × 200 см");
+  await bandModal.getByLabel("Ширина").selectOption("3 см × 200 см");
+  assert.equal(await bandModal.getByLabel("Ширина").inputValue(), "3 см × 200 см");
+  for (const width of [320, 390]) {
+    await mobile.setViewportSize({ width, height: 844 });
+    assert.ok(await bandModal.evaluate(element => element.scrollWidth <= element.clientWidth), "Band modal overflow at " + width);
+  }
+  await bandModal.locator(".detail-gallery").scrollIntoViewIfNeeded();
+  await mobile.screenshot({ path: artifacts + "/korean-band-mobile.png" });
+  await mobile.goto(url + "#product/mizuno-white", { waitUntil: "networkidle" });
+  const mizunoModal = mobile.locator("dialog");
+  assert.equal(await mizunoModal.getAttribute("aria-label"), "Mizuno — белое кимоно");
+  assert.equal(await mizunoModal.getByLabel("Цвет / вариант").inputValue(), "Белый");
+  await mizunoModal.locator(".gallery-main img").evaluate(image => image.decode());
+  assert.ok(await mizunoModal.evaluate(element => element.scrollWidth <= element.clientWidth));
+  await mizunoModal.locator(".detail-gallery").scrollIntoViewIfNeeded();
+  await mobile.screenshot({ path: artifacts + "/mizuno-mobile.png" });
+  await mobile.goto(url + "#product/mizuno-black-belt", { waitUntil: "networkidle" });
+  const beltModal = mobile.locator("dialog");
+  assert.equal(await beltModal.getByLabel("Желаемый размер").getAttribute("placeholder"), "Размер уточним при заказе");
+  assert.ok(await beltModal.evaluate(element => element.scrollWidth <= element.clientWidth));
+  await beltModal.locator(".detail-gallery").scrollIntoViewIfNeeded();
+  await mobile.screenshot({ path: artifacts + "/black-belt-mobile.png" });
   for (const name of fitlineNames) {
     await mobile.goto(url + "#product/fitline-" + name.toLowerCase());
     const fitlineModal = mobile.locator("dialog");
@@ -297,6 +456,16 @@ try {
   await modal.getByRole("button", { name: "Оформить", exact: true }).click();
   assert.ok((await modal.getByLabel("Текст заказа").inputValue()).includes("Текст: 柔道"));
   await mobile.keyboard.press("Escape");
+  await mobile.setViewportSize({ width: 390, height: 844 });
+  await mobile.getByRole("button", { name: "KZ", exact: true }).click();
+  await mobile.waitForFunction(() => document.documentElement.lang === "kk");
+  await mobile.waitForTimeout(250);
+  assert.ok(await mobile.locator(".language-switcher").isVisible());
+  assert.ok(await mobile.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "Kazakh mobile header must not overflow");
+  await mobile.screenshot({ path: artifacts + "/localization-kz-mobile.png" });
+  await mobile.getByRole("button", { name: "EN", exact: true }).click();
+  await mobile.waitForFunction(() => document.documentElement.lang === "en");
+  assert.ok(await mobile.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "English mobile header must not overflow");
   await mobileContext.close();
 
   const blockedContext = await browser.newContext();
@@ -311,7 +480,7 @@ try {
   assert.deepEqual(errors, []);
   assert.deepEqual(failures, []);
   assert.ok(requests.every(request => request.startsWith(url) || request.startsWith("https://wa.me/") || request.startsWith("https://www.instagram.com/")), "Unexpected external runtime dependency");
-  console.log("PASS: all 12 products and galleries; all 4 FitLine overviews, nutrition tables, accordions and mobile orders; filters/search; cart add/edit/remove/limits/persistence; cross-tab and blocked storage; Unicode/customization; order/copy; intercepted WhatsApp/Instagram links; anchors; FAQ; mobile 320-768; no console errors or broken assets.");
+  console.log("PASS: all 16 products and galleries; judogi facts; fixed and range prices; black belts; RU/KZ/EN switching and localized orders; locale and cart persistence; all 4 FitLine overviews, nutrition tables, accordions and mobile orders; filters/search including localized copy, Mizuno and Yusho; cart add/edit/remove/limits/persistence; cross-tab and blocked storage; Unicode/customization; order/copy; intercepted WhatsApp/Instagram links; anchors; FAQ; mobile 320-768; no console errors or broken assets.");
 } finally {
   await browser?.close();
   if (server.exitCode === null) {
